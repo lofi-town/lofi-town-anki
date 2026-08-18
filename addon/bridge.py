@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING, cast
 
 from aqt.qt import (
     QDesktopServices,
@@ -8,12 +9,18 @@ from aqt.qt import (
     QIODevice,
     QObject,
     QUrl,
-    QWebChannel,
     QWebEnginePage,
+    QWebEngineProfile,
     QWebEngineScript,
+    QWebEngineScriptCollection,
     pyqtSignal,
     pyqtSlot,
 )
+
+if TYPE_CHECKING:
+    from PyQt6.QtWebChannel import QWebChannel
+else:
+    from aqt.qt import QWebChannel
 
 from .constants import BRIDGE_API_VERSION, OAUTH_TIMEOUT_SECONDS
 from .oauth_callback import OAuthCallbackServer
@@ -30,7 +37,7 @@ class NativeBridge(QObject):
             timeout_seconds=OAUTH_TIMEOUT_SECONDS,
         )
 
-    @pyqtSlot(result=str)
+    @pyqtSlot(result="QString")
     def getOAuthCallbackUrl(self) -> str:
         try:
             value = self._callback_server.start()
@@ -41,7 +48,7 @@ class NativeBridge(QObject):
                 message="Could not start the local sign-in callback.",
             )
 
-    @pyqtSlot(str, result=str)
+    @pyqtSlot(str, result="QString")
     def beginOAuth(self, authorization_url: str) -> str:
         if not is_safe_oauth_authorization_url(authorization_url):
             self._callback_server.cancel()
@@ -58,7 +65,7 @@ class NativeBridge(QObject):
             return _result(ok=False, message="Could not open the system browser.")
         return _result(ok=True)
 
-    @pyqtSlot(str, result=str)
+    @pyqtSlot(str, result="QString")
     def openExternal(self, value: str) -> str:
         if not is_safe_external_url(value):
             return _result(ok=False, message="The external link was rejected.")
@@ -74,7 +81,9 @@ def install_bridge(page: QWebEnginePage, bridge: NativeBridge) -> QWebChannel:
     channel = QWebChannel(page)
     channel.registerObject("lofiTownAnki", bridge)
     page.setWebChannel(channel)
-    page.profile().scripts().insert(_bridge_script())
+    profile = cast(QWebEngineProfile, page.profile())
+    scripts = cast(QWebEngineScriptCollection, profile.scripts())
+    scripts.insert(_bridge_script())
     return channel
 
 
@@ -96,7 +105,7 @@ def _bridge_script() -> QWebEngineScript:
     qwebchannel = QFile(":/qtwebchannel/qwebchannel.js")
     if not qwebchannel.open(QIODevice.OpenModeFlag.ReadOnly):
         raise RuntimeError("Could not load Qt WebChannel support.")
-    source = bytes(qwebchannel.readAll()).decode("utf-8")
+    source = qwebchannel.readAll().data().decode("utf-8")
     qwebchannel.close()
 
     script = QWebEngineScript()

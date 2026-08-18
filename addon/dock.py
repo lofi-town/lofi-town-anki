@@ -12,9 +12,11 @@ from aqt.qt import (
     QIcon,
     QLabel,
     QMainWindow,
+    QMouseEvent,
     QPixmap,
     QProgressBar,
     QPushButton,
+    QResizeEvent,
     QSize,
     QStackedWidget,
     Qt,
@@ -93,7 +95,7 @@ class CozyTitleBar(QWidget):
             )
         )
 
-    def mouseDoubleClickEvent(self, event: object) -> None:
+    def mouseDoubleClickEvent(self, event: QMouseEvent | None) -> None:
         dock = self.parentWidget()
         if isinstance(dock, QDockWidget):
             dock.setFloating(not dock.isFloating())
@@ -140,6 +142,7 @@ class LofiTownDock(QDockWidget):
         self._state = state
         self._on_state_change = on_state_change
         self._disposed = False
+        self._navigation_rejected = False
         self._last_area = state["area"]
         self._resources_path = addon_path / "resources"
 
@@ -171,6 +174,7 @@ class LofiTownDock(QDockWidget):
         self.webview.loadStarted.connect(self._on_load_started)
         self.webview.loadProgress.connect(self.progress.setValue)
         self.webview.loadFinished.connect(self._on_load_finished)
+        self.webview.navigationRejected.connect(self._on_navigation_rejected)
         self.webview.processFailed.connect(self._show_error)
         self.visibilityChanged.connect(lambda _visible: self._schedule_state_save())
         self.topLevelChanged.connect(lambda _floating: self._schedule_state_save())
@@ -203,7 +207,7 @@ class LofiTownDock(QDockWidget):
             "area": self._last_area,
             "width": max(320, width),
             "floating": self.isFloating(),
-            "geometry": bytes(self.saveGeometry().toBase64()).decode("ascii")
+            "geometry": self.saveGeometry().toBase64().data().decode("ascii")
             if self.isFloating()
             else self._state["geometry"],
             "zoom_factor": self.webview.zoomFactor(),
@@ -214,7 +218,7 @@ class LofiTownDock(QDockWidget):
         self._save_timer.stop()
         self.webview.dispose()
 
-    def resizeEvent(self, event: object) -> None:
+    def resizeEvent(self, event: QResizeEvent | None) -> None:
         super().resizeEvent(event)
         self._schedule_state_save()
 
@@ -299,11 +303,20 @@ class LofiTownDock(QDockWidget):
         return view
 
     def _on_load_started(self) -> None:
+        self._navigation_rejected = False
         self.progress.setValue(0)
         self.stack.setCurrentWidget(self.loading_view)
 
     def _on_load_finished(self, succeeded: bool) -> None:
+        if self._navigation_rejected:
+            self._navigation_rejected = False
+            self.stack.setCurrentWidget(self.webview)
+            return
         self.stack.setCurrentWidget(self.webview if succeeded else self.error_view)
+
+    def _on_navigation_rejected(self) -> None:
+        self._navigation_rejected = True
+        self.stack.setCurrentWidget(self.webview)
 
     def _show_error(self) -> None:
         self.stack.setCurrentWidget(self.error_view)

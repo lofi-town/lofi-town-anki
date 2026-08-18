@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 
 from aqt.qt import (
     QDesktopServices,
@@ -12,6 +13,7 @@ from aqt.qt import (
     QWebEngineProfile,
     QWebEngineSettings,
     QWebEngineView,
+    QWidget,
     pyqtSignal,
 )
 
@@ -21,6 +23,8 @@ from .security import is_allowed_app_url, is_safe_external_url
 
 
 class TrustedPage(QWebEnginePage):
+    navigationRejected = pyqtSignal()
+
     def __init__(
         self,
         profile: QWebEngineProfile,
@@ -50,17 +54,19 @@ class TrustedPage(QWebEnginePage):
             return True
         if is_safe_external_url(value):
             QDesktopServices.openUrl(url)
+        self.navigationRejected.emit()
         return False
 
 
 class LofiWebView(QWebEngineView):
+    navigationRejected = pyqtSignal()
     processFailed = pyqtSignal()
 
     def __init__(
         self,
         user_files_path: Path,
         zoom_factor: float,
-        parent: QObject | None = None,
+        parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
         self.setAcceptDrops(False)
@@ -89,6 +95,7 @@ class LofiWebView(QWebEngineView):
         self._configure_permissions()
 
         self.trusted_page.newWindowRequested.connect(self._open_new_window)
+        self.trusted_page.navigationRejected.connect(self.navigationRejected.emit)
         self.trusted_page.renderProcessTerminated.connect(
             lambda *_args: self.processFailed.emit()
         )
@@ -99,13 +106,13 @@ class LofiWebView(QWebEngineView):
     def dispose(self) -> None:
         self.bridge.shutdown()
         self.stop()
-        old_page = self.page()
+        old_page = cast(QWebEnginePage, self.page())
         self.setPage(QWebEnginePage(self))
         old_page.deleteLater()
         self.profile.deleteLater()
 
     def _configure_settings(self) -> None:
-        settings = self.settings()
+        settings = cast(QWebEngineSettings, self.settings())
         attributes = QWebEngineSettings.WebAttribute
         values = {
             attributes.JavascriptEnabled: True,

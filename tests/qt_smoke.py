@@ -6,7 +6,7 @@ from pathlib import Path
 
 os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
 
-from aqt.qt import QApplication, QMainWindow, QTimer
+from aqt.qt import QApplication, QMainWindow, QTimer, QUrl, QWebEnginePage
 
 from addon.dock import LofiTownDock
 from addon.state import DEFAULT_STATE
@@ -38,6 +38,17 @@ def main() -> None:
                     script.name() == "lofi-town-anki-bridge"
                     for script in dock.webview.profile.scripts().toList()
                 )
+                dock.stack.setCurrentWidget(dock.webview)
+                dock._on_load_started()
+                assert dock.stack.currentWidget() is dock.loading_view
+                accepted = dock.webview.trusted_page.acceptNavigationRequest(
+                    QUrl("javascript:alert(1)"),
+                    QWebEnginePage.NavigationType.NavigationTypeLinkClicked,
+                    True,
+                )
+                assert not accepted
+                dock._on_load_finished(False)
+                assert dock.stack.currentWidget() is dock.webview
                 dock.webview.bridge.getOAuthCallbackUrl()
                 assert dock.webview.bridge._callback_server.running
                 dock.dispose()

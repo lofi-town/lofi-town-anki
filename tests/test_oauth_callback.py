@@ -52,7 +52,12 @@ def test_keeps_listening_after_wrong_path_and_malformed_callback() -> None:
     assert _get(f"{origin}/wrong?code=value")[0] == 404
     assert _get(f"{callback_url}?state=missing-code")[0] == 400
     assert server.running
-    assert _get(f"{callback_url}?error=access_denied&error_description=No")[0] == 200
+    status, body = _get(
+        f"{callback_url}?error=access_denied&error_description=Not%20now"
+    )
+    assert status == 200
+    assert "Sign-in cancelled" in body
+    assert "Signed in" not in body
     assert len(callbacks) == 1
     assert "error=access_denied" in callbacks[0]
     server.stop()
@@ -63,9 +68,21 @@ def test_rejects_duplicate_callback() -> None:
     server = OAuthCallbackServer(callbacks.append, timeout_seconds=2)
     callback_url = server.start()
     target = f"{urlsplit(callback_url).path}?code=first"
-    assert server._accept_request(target)[0] == 200
-    assert server._accept_request(target)[0] == 410
+    assert server._accept_request(target).status == 200
+    assert server._accept_request(target).status == 410
     assert len(callbacks) == 1
+    server.stop()
+
+
+def test_renders_provider_errors_as_failed_sign_in() -> None:
+    server = OAuthCallbackServer(lambda _url: None, timeout_seconds=2)
+    callback_url = server.start()
+
+    status, body = _get(f"{callback_url}?error=server_error")
+
+    assert status == 200
+    assert "Sign-in failed" in body
+    assert "Signed in" not in body
     server.stop()
 
 
@@ -73,7 +90,7 @@ def test_rejects_oversized_request_target() -> None:
     server = OAuthCallbackServer(lambda _url: None, timeout_seconds=2)
     callback_url = server.start()
     target = f"{urlsplit(callback_url).path}?code={'x' * 5000}"
-    assert server._accept_request(target)[0] == 414
+    assert server._accept_request(target).status == 414
     server.stop()
 
 

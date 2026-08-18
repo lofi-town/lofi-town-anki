@@ -2,7 +2,8 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from copy import deepcopy
-from typing import Any
+from pathlib import Path
+from typing import Any, cast
 
 from aqt.qt import (
     QButtonGroup,
@@ -11,11 +12,13 @@ from aqt.qt import (
     QColorDialog,
     QComboBox,
     QDialog,
+    QFont,
     QFrame,
     QHBoxLayout,
     QLabel,
     QPushButton,
     QScrollArea,
+    QSize,
     QSlider,
     Qt,
     QVBoxLayout,
@@ -23,6 +26,8 @@ from aqt.qt import (
 )
 
 from .configuration import DEFAULT_CONFIG, PALETTES, normalize_config, theme_tokens
+from .fonts import load_cozy_font_family
+from .mascot import CozyBunnyLabel
 
 
 class ThemeSettingsDialog(QDialog):
@@ -39,11 +44,14 @@ class ThemeSettingsDialog(QDialog):
         self._dark_mode = dark_mode
         self._save = save
         self._palette_buttons: dict[str, QPushButton] = {}
+        self._resources_path = Path(__file__).resolve().parent / "resources"
 
         self.setObjectName("lofiTownSettings")
-        self.setWindowTitle("Lofi Town Theme")
+        self.setWindowTitle("Lofi Town Appearance")
         self.setMinimumSize(820, 610)
         self.resize(900, 650)
+        if font_family := load_cozy_font_family():
+            self.setFont(QFont(font_family))
 
         root = QHBoxLayout(self)
         root.setContentsMargins(18, 18, 18, 18)
@@ -62,13 +70,17 @@ class ThemeSettingsDialog(QDialog):
         layout.setSpacing(12)
 
         header = QHBoxLayout()
-        title = QLabel("COZY STUDY", panel)
+        title = QLabel("PREVIEW", panel)
         title.setObjectName("previewEyebrow")
-        moon = QLabel("♪", panel)
-        moon.setObjectName("previewMoon")
+        self._preview_mascot = CozyBunnyLabel(
+            self._resources_path,
+            QSize(68, 80),
+            panel,
+        )
+        self._preview_mascot.set_motion(self._draft["motion"])
         header.addWidget(title)
         header.addStretch(1)
-        header.addWidget(moon)
+        header.addWidget(self._preview_mascot)
         layout.addLayout(header)
 
         scene = QFrame(panel)
@@ -78,7 +90,7 @@ class ThemeSettingsDialog(QDialog):
         scene_layout.setSpacing(10)
 
         window_header = QHBoxLayout()
-        room = QLabel("today's decks", scene)
+        room = QLabel("Decks", scene)
         room.setObjectName("sceneTitle")
         count = QLabel("12 due", scene)
         count.setObjectName("sceneBadge")
@@ -87,14 +99,13 @@ class ThemeSettingsDialog(QDialog):
         window_header.addWidget(count)
         scene_layout.addLayout(window_header)
 
-        for name, counts, tone in (
-            ("Japanese", "6", "accent"),
-            ("Biology", "4", "leaf"),
-            ("Art history", "2", "blue"),
+        for name, counts in (
+            ("Default", "6"),
+            ("Languages", "4"),
+            ("Science", "2"),
         ):
             row = QFrame(scene)
             row.setObjectName("previewDeck")
-            row.setProperty("tone", tone)
             row_layout = QHBoxLayout(row)
             row_layout.setContentsMargins(13, 10, 13, 10)
             name_label = QLabel(name, row)
@@ -112,14 +123,6 @@ class ThemeSettingsDialog(QDialog):
         scene_layout.addWidget(study)
         layout.addWidget(scene, 1)
 
-        note = QLabel(
-            "Original cozy styling built for Anki. "
-            "Card templates stay untouched by default.",
-            panel,
-        )
-        note.setObjectName("previewNote")
-        note.setWordWrap(True)
-        layout.addWidget(note)
         self._preview_panel = panel
         return panel
 
@@ -140,31 +143,15 @@ class ThemeSettingsDialog(QDialog):
         layout.setContentsMargins(24, 22, 24, 16)
         layout.setSpacing(16)
 
-        eyebrow = QLabel("LOFI TOWN FOR ANKI", content)
-        eyebrow.setObjectName("eyebrow")
-        title = QLabel("A calmer place to study.", content)
+        title = QLabel("Appearance", content)
         title.setObjectName("title")
-        title.setWordWrap(True)
-        subtitle = QLabel(
-            "Use Lofi Town's cozy palette, tune the spacing, and keep your cards "
-            "exactly as their authors designed them.",
-            content,
-        )
-        subtitle.setObjectName("subtitle")
-        subtitle.setWordWrap(True)
-        layout.addWidget(eyebrow)
         layout.addWidget(title)
-        layout.addWidget(subtitle)
-
-        status = QLabel(content)
-        status.setObjectName("compatibilityBadge")
         if ankihub_installed:
-            status.setText("✓ AnkiHub detected, safe mode is active")
-        else:
-            status.setText("✓ AnkiHub-safe presentation hooks")
-        layout.addWidget(status, 0, Qt.AlignmentFlag.AlignLeft)
+            status = QLabel("AnkiHub views are excluded from theming.", content)
+            status.setObjectName("compatibilityBadge")
+            layout.addWidget(status, 0, Qt.AlignmentFlag.AlignLeft)
 
-        self._enabled = QCheckBox("Use the cozy theme", content)
+        self._enabled = QCheckBox("Theme enabled", content)
         self._enabled.setObjectName("masterToggle")
         layout.addWidget(self._enabled)
 
@@ -185,52 +172,50 @@ class ThemeSettingsDialog(QDialog):
 
         custom_row = self._setting_row(
             "Custom accent",
-            "Use one color for buttons, focus rings, and the active deck.",
+            "Overrides the selected accent.",
             content,
         )
         self._custom_accent_enabled = QCheckBox("Custom", custom_row)
-        self._accent_button = QPushButton("Choose color", custom_row)
-        custom_layout = custom_row.layout()
-        if custom_layout is None:
-            raise RuntimeError("Custom accent row has no layout.")
+        self._accent_button = QPushButton("Choose…", custom_row)
+        custom_layout = cast(QHBoxLayout, custom_row.layout())
         custom_layout.addWidget(self._custom_accent_enabled)
         custom_layout.addWidget(self._accent_button)
         layout.addWidget(custom_row)
 
         layout.addWidget(self._section_label("Appearance", content))
         self._color_mode = QComboBox(content)
-        self._color_mode.addItem("Cozy light", "light")
+        self._color_mode.addItem("Light", "light")
         self._color_mode.addItem("Follow Anki", "follow_anki")
-        self._color_mode.addItem("Cozy dark", "dark")
+        self._color_mode.addItem("Dark", "dark")
         layout.addWidget(
             self._row_with_control(
                 "Color mode",
-                "Use the game's light brown style or follow Anki.",
+                "Light, dark, or match Anki.",
                 self._color_mode,
                 content,
             )
         )
 
         self._density = QComboBox(content)
-        self._density.addItem("Cozy", "cozy")
+        self._density.addItem("Comfortable", "cozy")
         self._density.addItem("Compact", "compact")
         layout.addWidget(
             self._row_with_control(
                 "Deck spacing",
-                "Choose relaxed or information-dense deck rows.",
+                "Adjust deck row height.",
                 self._density,
                 content,
             )
         )
 
         self._motion = QComboBox(content)
-        self._motion.addItem("Follow system", "system")
-        self._motion.addItem("Full", "full")
+        self._motion.addItem("System", "system")
+        self._motion.addItem("On", "full")
         self._motion.addItem("Reduced", "reduced")
         layout.addWidget(
             self._row_with_control(
                 "Motion",
-                "Control the gentle entrance and press effects.",
+                "Use system preference or override it.",
                 self._motion,
                 content,
             )
@@ -243,7 +228,7 @@ class ThemeSettingsDialog(QDialog):
         layout.addWidget(
             self._row_with_control(
                 "Text size",
-                "Scale theme chrome without changing card content.",
+                "Does not affect card content.",
                 self._font_scale,
                 content,
             )
@@ -255,20 +240,18 @@ class ThemeSettingsDialog(QDialog):
         layout.addWidget(
             self._row_with_control(
                 "Roundness",
-                "Tune cards from tidy to extra soft.",
+                "Adjust panel and control corners.",
                 self._corner_radius,
                 content,
             )
         )
 
         layout.addWidget(self._section_label("Details", content))
-        self._texture = QCheckBox("Subtle paper texture", content)
-        self._native_window = QCheckBox("Match the main window frame", content)
-        self._review_backdrop = QCheckBox(
-            "Frame review cards with a cozy backdrop", content
-        )
+        self._texture = QCheckBox("Paper texture", content)
+        self._native_window = QCheckBox("Theme native window", content)
+        self._review_backdrop = QCheckBox("Review backdrop", content)
         self._review_backdrop.setToolTip(
-            "This changes the space around a card. It does not edit the card template."
+            "Styles only the area around the card."
         )
         layout.addWidget(self._texture)
         layout.addWidget(self._native_window)
@@ -282,11 +265,11 @@ class ThemeSettingsDialog(QDialog):
         footer.setObjectName("footer")
         footer_layout = QHBoxLayout(footer)
         footer_layout.setContentsMargins(18, 13, 18, 16)
-        reset = QPushButton("Restore defaults", footer)
+        reset = QPushButton("Defaults", footer)
         reset.setObjectName("resetButton")
         cancel = QPushButton("Cancel", footer)
         cancel.setObjectName("cancelButton")
-        save = QPushButton("Save changes", footer)
+        save = QPushButton("Save", footer)
         save.setObjectName("saveButton")
         save.setDefault(True)
         reset.clicked.connect(self._restore_defaults)
@@ -334,9 +317,7 @@ class ThemeSettingsDialog(QDialog):
     ) -> QFrame:
         row = self._setting_row(title, description, parent)
         control.setMinimumWidth(128)
-        row_layout = row.layout()
-        if row_layout is None:
-            raise RuntimeError("Setting row has no layout.")
+        row_layout = cast(QHBoxLayout, row.layout())
         row_layout.addWidget(control)
         return row
 
@@ -425,6 +406,7 @@ class ThemeSettingsDialog(QDialog):
         if mode == "follow_anki":
             mode = "dark" if self._dark_mode else "light"
         tokens = theme_tokens(self._draft, mode)
+        self._preview_mascot.set_motion(self._draft["motion"])
         radius = self._draft["corner_radius"]
         self._accent_button.setStyleSheet(
             f"background:{tokens['accent']}; color:#FFFAF0; border:0; "
@@ -450,7 +432,6 @@ def _dialog_stylesheet(tokens: dict[str, str], radius: int, density: str) -> str
 QDialog#lofiTownSettings {{
     background: {tokens["bg"]};
     color: {tokens["text"]};
-    font-family: "Bricolage Grotesque", "Avenir Next", "Segoe UI", sans-serif;
 }}
 QFrame#previewPanel, QFrame#controlsShell {{
     background: {tokens["surface"]};
@@ -460,16 +441,11 @@ QFrame#previewPanel, QFrame#controlsShell {{
 QFrame#previewPanel {{
     background: {tokens["raised"]};
 }}
-QLabel#previewEyebrow, QLabel#eyebrow, QLabel#sectionLabel {{
+QLabel#previewEyebrow, QLabel#sectionLabel {{
     color: {tokens["accent"]};
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 1.5px;
-}}
-QLabel#previewMoon {{
-    color: {tokens["accent"]};
-    font-size: 28px;
-    font-weight: 800;
 }}
 QFrame#windowScene {{
     background: {tokens["card"]};
@@ -512,16 +488,14 @@ QPushButton#previewStudy {{
     font-weight: 800;
     padding: 13px;
 }}
-QLabel#previewNote, QLabel#subtitle, QLabel#settingDescription {{
+QLabel#settingDescription {{
     color: {tokens["text_soft"]};
 }}
-QLabel#previewNote {{ font-size: 12px; }}
 QLabel#title {{
     color: {tokens["text"]};
-    font-size: 25px;
-    font-weight: 850;
+    font-size: 24px;
+    font-weight: 800;
 }}
-QLabel#subtitle {{ font-size: 13px; }}
 QLabel#compatibilityBadge {{
     background: {tokens["accent_soft"]};
     color: {tokens["accent"]};

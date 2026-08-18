@@ -41,3 +41,14 @@ def test_top_toolbar_overrides_ankis_dark_fancy_layer() -> None:
     css = (ROOT / "addon" / "web" / "cozy.css").read_text(encoding="utf-8")
     assert 'body.fancy:not(.flat) .toolbar' in css
     assert 'body.fancy:not(.flat)\n    :is(#decks' in css
+
+
+def test_uses_lofi_towns_variable_font_without_fallback_soup() -> None:
+    css = (ROOT / "addon" / "web" / "cozy.css").read_text(encoding="utf-8")
+    assert 'font-family: "Bricolage Grotesque Variable"' in css
+    assert "BricolageGrotesqueVariable.woff2" in css
+    assert "font-weight: 200 800" in css
+    assert "Avenir Next" not in css
+    assert "Trebuchet" not in css
+    assert "font-weight: 850" not in css
+    assert "font-weight: 900" not in css

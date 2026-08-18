@@ -26,7 +26,7 @@ class AddonController:
         self._package = mw.addonManager.addonFromModule(__name__)
         mw.addonManager.setWebExports(
             __name__,
-            r"(web/.*\.css|resources/fonts/.*\.ttf)",
+            r"(web/.*\.css|resources/fonts/.*\.woff2)",
         )
         mw.addonManager.setConfigAction(__name__, self.open_theme_settings)
 
@@ -64,7 +64,13 @@ class AddonController:
             else Qt.DockWidgetArea.RightDockWidgetArea
         )
         addon_path = Path(__file__).resolve().parent
-        dock = LofiTownDock(state, addon_path, self._write_state, mw)
+        dock = LofiTownDock(
+            state,
+            addon_path,
+            self._write_state,
+            mw,
+            motion=self._theme_config["motion"],
+        )
         self.dock = dock
         mw.addDockWidget(area, dock)
 
@@ -156,6 +162,8 @@ class AddonController:
         current: dict[str, Any] = mw.addonManager.getConfig(__name__) or {}
         current["theme"] = self._theme_config
         mw.addonManager.writeConfig(__name__, current)
+        if self.dock is not None:
+            self.dock.set_motion(self._theme_config["motion"])
         self.apply_native_style()
 
     @staticmethod

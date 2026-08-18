@@ -6,10 +6,11 @@ from pathlib import Path
 
 os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
 
-from aqt.qt import QApplication, QMainWindow, QTimer, QUrl, QWebEnginePage
+from aqt.qt import QApplication, QMainWindow, QMovie, QTimer, QUrl, QWebEnginePage
 
 from addon.configuration import DEFAULT_CONFIG
 from addon.dock import LofiTownDock
+from addon.fonts import load_cozy_font_family
 from addon.settings_dialog import ThemeSettingsDialog
 from addon.state import DEFAULT_STATE
 
@@ -34,6 +35,16 @@ def main() -> None:
                     addon_path,
                     lambda _state: None,
                     window,
+                )
+                font_family = load_cozy_font_family()
+                assert font_family
+                assert dock.font().family() == font_family
+                assert dock.loading_mascot.movie().isValid()
+                assert dock.loading_mascot.movie().frameCount() > 1
+                dock.set_motion("reduced")
+                assert (
+                    dock.loading_mascot.movie().state()
+                    == QMovie.MovieState.NotRunning
                 )
                 assert dock.webview.page() is not None
                 assert any(
@@ -61,6 +72,13 @@ def main() -> None:
                     dark_mode=True,
                     ankihub_installed=False,
                     save=saved_themes.append,
+                )
+                assert settings.font().family() == font_family
+                assert settings._preview_mascot.movie().isValid()
+                settings._set_combo(settings._motion, "reduced")
+                assert (
+                    settings._preview_mascot.movie().state()
+                    == QMovie.MovieState.NotRunning
                 )
                 settings._palette_buttons["grape"].click()
                 assert settings._draft["palette"] == "grape"

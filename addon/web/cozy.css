@@ -1,8 +1,9 @@
 @font-face {
-    font-family: "Bricolage Grotesque";
+    font-family: "Bricolage Grotesque Variable";
     font-style: normal;
-    font-weight: 100 900;
-    src: url("../resources/fonts/BricolageGrotesque.ttf") format("truetype");
+    font-display: swap;
+    font-weight: 200 800;
+    src: url("../resources/fonts/BricolageGrotesqueVariable.woff2") format("woff2-variations");
 }
 
 :root.lofi-town-theme {
@@ -25,7 +26,7 @@
     --lofi-info: var(--lofi-light-info);
     --lofi-row-block: 8px;
     --lofi-row-inline: 13px;
-    --lofi-font: "Bricolage Grotesque", ui-rounded, "Avenir Next Rounded", "Trebuchet MS", sans-serif;
+    --lofi-font: "Bricolage Grotesque Variable", system-ui, sans-serif;
     --lofi-soft-shadow: 0 12px 28px -12px color-mix(in srgb, var(--lofi-shadow) 45%, transparent);
     --lofi-card-shadow: 0 8px 16px -10px color-mix(in srgb, var(--lofi-shadow) 38%, transparent);
     color-scheme: light;
@@ -223,7 +224,7 @@
 
 :root.lofi-town-theme[data-lofi-view="deck-browser"] .collapse {
     color: var(--lofi-text-muted);
-    font-weight: 900;
+    font-weight: 800;
 }
 
 :root.lofi-town-theme[data-lofi-view="deck-browser"]
@@ -300,7 +301,7 @@
 :root.lofi-town-theme[data-lofi-view="overview"] h3 {
     color: var(--lofi-text);
     font-size: clamp(1.65rem, 4vw, 2.4rem);
-    font-weight: 850;
+    font-weight: 800;
     letter-spacing: -0.035em;
     margin: 0 0 10px;
 }
@@ -326,7 +327,7 @@
     background: var(--lofi-accent);
     color: #fffaf0;
     font-size: 1rem;
-    font-weight: 850;
+    font-weight: 800;
     padding: 12px 24px;
     transition: transform 100ms ease, box-shadow 100ms ease;
 }
@@ -358,7 +359,7 @@
 :root.lofi-town-theme[data-lofi-view="congrats"] .congrats h1 {
     color: var(--lofi-text);
     font-size: clamp(1.65rem, 4vw, 2.4rem);
-    font-weight: 850;
+    font-weight: 800;
     letter-spacing: -0.035em;
     margin: 0 0 12px;
 }

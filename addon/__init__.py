@@ -1,0 +1,11 @@
+from __future__ import annotations
+
+try:
+    from aqt import mw
+except ImportError:
+    mw = None
+
+if mw is not None:
+    from .plugin import initialize
+
+    initialize()

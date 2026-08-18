@@ -42,7 +42,39 @@ def test_valid_custom_accent_is_normalized_and_used() -> None:
 def test_booleans_are_not_treated_as_numbers() -> None:
     config = normalize_config({"font_scale": True, "corner_radius": False})
     assert config["font_scale"] == 1.0
-    assert config["corner_radius"] == 16
+    assert config["corner_radius"] == 14
+
+
+def test_legacy_default_migrates_to_game_palette_in_light_mode() -> None:
+    config = normalize_config(
+        {
+            "config_version": 1,
+            "palette": "sunroom",
+            "color_mode": "follow_anki",
+            "custom_accent_enabled": False,
+            "custom_accent": "#E66B2E",
+            "corner_radius": 16,
+            "texture": True,
+        }
+    )
+
+    assert config["config_version"] == 2
+    assert config["palette"] == "tangerine"
+    assert config["color_mode"] == "light"
+    assert config["custom_accent"] == "#F2762E"
+    assert config["corner_radius"] == 14
+    assert config["texture"] is False
+
+
+def test_game_accents_share_the_warm_neutral_base() -> None:
+    tangerine = theme_tokens({"config_version": 2, "palette": "tangerine"}, "light")
+    grape = theme_tokens({"config_version": 2, "palette": "grape"}, "light")
+
+    assert tangerine["bg"] == grape["bg"] == "#F6E6C4"
+    assert tangerine["surface"] == grape["surface"] == "#FFF7E6"
+    assert tangerine["text"] == grape["text"] == "#4A2E12"
+    assert tangerine["accent"] == "#F2762E"
+    assert tangerine["accent_drop"] == "#C4551A"
 
 
 def test_color_helpers_validate_and_mix() -> None:

@@ -62,9 +62,9 @@ class ThemeSettingsDialog(QDialog):
         layout.setSpacing(12)
 
         header = QHBoxLayout()
-        title = QLabel("STUDY NOOK", panel)
+        title = QLabel("COZY STUDY", panel)
         title.setObjectName("previewEyebrow")
-        moon = QLabel("☾", panel)
+        moon = QLabel("♪", panel)
         moon.setObjectName("previewMoon")
         header.addWidget(title)
         header.addStretch(1)
@@ -78,7 +78,7 @@ class ThemeSettingsDialog(QDialog):
         scene_layout.setSpacing(10)
 
         window_header = QHBoxLayout()
-        room = QLabel("evening review", scene)
+        room = QLabel("today's decks", scene)
         room.setObjectName("sceneTitle")
         count = QLabel("12 due", scene)
         count.setObjectName("sceneBadge")
@@ -106,7 +106,7 @@ class ThemeSettingsDialog(QDialog):
             row_layout.addWidget(count_label)
             scene_layout.addWidget(row)
 
-        study = QPushButton("Start a gentle review", scene)
+        study = QPushButton("Start review", scene)
         study.setObjectName("previewStudy")
         study.setEnabled(False)
         scene_layout.addWidget(study)
@@ -142,11 +142,11 @@ class ThemeSettingsDialog(QDialog):
 
         eyebrow = QLabel("LOFI TOWN FOR ANKI", content)
         eyebrow.setObjectName("eyebrow")
-        title = QLabel("Make study time feel like home.", content)
+        title = QLabel("A calmer place to study.", content)
         title.setObjectName("title")
         title.setWordWrap(True)
         subtitle = QLabel(
-            "Choose a room palette, tune the spacing, and keep your cards "
+            "Use Lofi Town's cozy palette, tune the spacing, and keep your cards "
             "exactly as their authors designed them.",
             content,
         )
@@ -168,7 +168,7 @@ class ThemeSettingsDialog(QDialog):
         self._enabled.setObjectName("masterToggle")
         layout.addWidget(self._enabled)
 
-        layout.addWidget(self._section_label("Room palette", content))
+        layout.addWidget(self._section_label("Accent color", content))
         palette_row = QHBoxLayout()
         palette_row.setSpacing(8)
         self._palette_group = QButtonGroup(self)
@@ -199,13 +199,13 @@ class ThemeSettingsDialog(QDialog):
 
         layout.addWidget(self._section_label("Appearance", content))
         self._color_mode = QComboBox(content)
+        self._color_mode.addItem("Cozy light", "light")
         self._color_mode.addItem("Follow Anki", "follow_anki")
-        self._color_mode.addItem("Always light", "light")
-        self._color_mode.addItem("Always dark", "dark")
+        self._color_mode.addItem("Cozy dark", "dark")
         layout.addWidget(
             self._row_with_control(
                 "Color mode",
-                "Follow Anki's light and dark appearance.",
+                "Use the game's light brown style or follow Anki.",
                 self._color_mode,
                 content,
             )
@@ -262,7 +262,7 @@ class ThemeSettingsDialog(QDialog):
         )
 
         layout.addWidget(self._section_label("Details", content))
-        self._texture = QCheckBox("Soft background texture", content)
+        self._texture = QCheckBox("Subtle paper texture", content)
         self._native_window = QCheckBox("Match the main window frame", content)
         self._review_backdrop = QCheckBox(
             "Frame review cards with a cozy backdrop", content
@@ -432,11 +432,13 @@ class ThemeSettingsDialog(QDialog):
         )
         for key, button in self._palette_buttons.items():
             accent = PALETTES[key]["accent"]
-            selected = "3px" if key == self._draft["palette"] else "1px"
+            selected = key == self._draft["palette"]
+            border_width = "3px" if selected else "1px"
+            background = tokens["accent_soft"] if selected else tokens["surface"]
             button.setStyleSheet(
-                f"QPushButton {{ background:{accent}; color:#FFFAF0; "
-                f"border:{selected} solid {tokens['card']}; "
-                "border-radius:10px; padding:9px 6px; font-weight:700; }}"
+                f"QPushButton {{ background:{background}; color:{tokens['text']}; "
+                f"border:{border_width} solid {accent}; "
+                "border-radius:10px; padding:9px 6px; font-weight:700; }"
             )
         self.setStyleSheet(_dialog_stylesheet(tokens, radius, self._draft["density"]))
         self._preview_panel.setEnabled(self._draft["enabled"])
@@ -456,7 +458,7 @@ QFrame#previewPanel, QFrame#controlsShell {{
     border-radius: {radius + 7}px;
 }}
 QFrame#previewPanel {{
-    background: {tokens["secondary"]};
+    background: {tokens["raised"]};
 }}
 QLabel#previewEyebrow, QLabel#eyebrow, QLabel#sectionLabel {{
     color: {tokens["accent"]};
@@ -504,6 +506,7 @@ QPushButton#previewStudy {{
     background: {tokens["accent"]};
     color: #FFFAF0;
     border: 0;
+    border-bottom: 4px solid {tokens["accent_drop"]};
     border-radius: {max(10, radius - 2)}px;
     font-size: 14px;
     font-weight: 800;
@@ -553,7 +556,8 @@ QCheckBox::indicator:checked {{
     border-color: {tokens["accent"]};
 }}
 QCheckBox#masterToggle {{
-    background: {tokens["accent_soft"]};
+    background: {tokens["hover"]};
+    border: 1px solid {tokens["border"]};
     border-radius: {max(10, radius - 2)}px;
     color: {tokens["text"]};
     font-size: 14px;
@@ -606,5 +610,6 @@ QPushButton#saveButton {{
     background: {tokens["accent"]};
     color: #FFFAF0;
     border: 0;
+    border-bottom: 4px solid {tokens["accent_drop"]};
 }}
 """

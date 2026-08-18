@@ -5,118 +5,83 @@ from copy import deepcopy
 from typing import Any
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "config_version": 1,
+    "config_version": 2,
     "enabled": True,
-    "palette": "sunroom",
-    "color_mode": "follow_anki",
+    "palette": "tangerine",
+    "color_mode": "light",
     "custom_accent_enabled": False,
-    "custom_accent": "#E66B2E",
+    "custom_accent": "#F2762E",
     "density": "cozy",
     "font_scale": 1.0,
-    "corner_radius": 16,
+    "corner_radius": 14,
     "motion": "system",
-    "texture": True,
+    "texture": False,
     "review_backdrop": False,
     "native_window": True,
 }
 
+_LIGHT_BASE = {
+    "bg": "#F6E6C4",
+    "surface": "#FFF7E6",
+    "card": "#FFFDF5",
+    "border": "#F0E2C4",
+    "secondary": "#FFE7BF",
+    "raised": "#FBEFD3",
+    "hover": "#FFF3DC",
+    "text": "#4A2E12",
+    "text_soft": "#6E4E28",
+    "text_muted": "#9A6B3C",
+}
+
+_DARK_BASE = {
+    "bg": "#2A1E18",
+    "surface": "#36271F",
+    "card": "#3F2E24",
+    "border": "#604936",
+    "secondary": "#4B372A",
+    "raised": "#453226",
+    "hover": "#513B2C",
+    "text": "#FFF2D8",
+    "text_soft": "#E6C9A6",
+    "text_muted": "#BE9973",
+}
+
 PALETTES: dict[str, dict[str, Any]] = {
-    "sunroom": {
-        "label": "Sunroom",
-        "accent": "#E66B2E",
-        "light": {
-            "bg": "#F6E6C4",
-            "surface": "#FFF7E6",
-            "card": "#FFFDF5",
-            "border": "#E7CFA0",
-            "secondary": "#FFE7BF",
-            "text": "#4A2E12",
-            "text_soft": "#6E4E28",
-            "text_muted": "#9A6B3C",
-        },
-        "dark": {
-            "bg": "#241B17",
-            "surface": "#30241D",
-            "card": "#3A2B22",
-            "border": "#5C4433",
-            "secondary": "#4A3528",
-            "text": "#FFF2D8",
-            "text_soft": "#E6C9A6",
-            "text_muted": "#BE9973",
-        },
+    "tangerine": {
+        "label": "Tangerine",
+        "accent": "#F2762E",
+        "accent_drop": "#C4551A",
+        "light": _LIGHT_BASE,
+        "dark": _DARK_BASE,
     },
-    "matcha": {
-        "label": "Matcha",
-        "accent": "#5B9D55",
-        "light": {
-            "bg": "#E8E7CE",
-            "surface": "#F8F5E5",
-            "card": "#FFFDF3",
-            "border": "#CCD2A9",
-            "secondary": "#DEE8C8",
-            "text": "#30432D",
-            "text_soft": "#52624A",
-            "text_muted": "#78836A",
-        },
-        "dark": {
-            "bg": "#19231B",
-            "surface": "#243027",
-            "card": "#2D392F",
-            "border": "#465C48",
-            "secondary": "#354637",
-            "text": "#EDF5DE",
-            "text_soft": "#C5D6B9",
-            "text_muted": "#97AE91",
-        },
+    "honey": {
+        "label": "Honey",
+        "accent": "#F4B72A",
+        "accent_drop": "#C9900F",
+        "light": _LIGHT_BASE,
+        "dark": _DARK_BASE,
     },
-    "rainy": {
-        "label": "Rainy Day",
-        "accent": "#2F91AE",
-        "light": {
-            "bg": "#DCE9ED",
-            "surface": "#EEF5F5",
-            "card": "#FAFDFB",
-            "border": "#B8D0D5",
-            "secondary": "#D3E8E9",
-            "text": "#29444C",
-            "text_soft": "#49626A",
-            "text_muted": "#71888E",
-        },
-        "dark": {
-            "bg": "#172329",
-            "surface": "#213138",
-            "card": "#293C43",
-            "border": "#405C65",
-            "secondary": "#304951",
-            "text": "#E9F5F5",
-            "text_soft": "#C0D6D9",
-            "text_muted": "#8FADB3",
-        },
+    "leaf": {
+        "label": "Leaf",
+        "accent": "#5BA84F",
+        "accent_drop": "#3F8236",
+        "light": _LIGHT_BASE,
+        "dark": _DARK_BASE,
     },
-    "plum": {
-        "label": "Plum Night",
-        "accent": "#8665B5",
-        "light": {
-            "bg": "#E9E0EC",
-            "surface": "#F7F0F3",
-            "card": "#FFF9F5",
-            "border": "#D5BED9",
-            "secondary": "#E8D9EE",
-            "text": "#46334F",
-            "text_soft": "#66536D",
-            "text_muted": "#8B758F",
-        },
-        "dark": {
-            "bg": "#201B29",
-            "surface": "#2B2437",
-            "card": "#352C42",
-            "border": "#554666",
-            "secondary": "#413451",
-            "text": "#F7EDFF",
-            "text_soft": "#D8C4E5",
-            "text_muted": "#A991B9",
-        },
+    "grape": {
+        "label": "Grape",
+        "accent": "#8A63C4",
+        "accent_drop": "#6A45A2",
+        "light": _LIGHT_BASE,
+        "dark": _DARK_BASE,
     },
+}
+
+_LEGACY_PALETTES = {
+    "sunroom": "tangerine",
+    "matcha": "leaf",
+    "rainy": "grape",
+    "plum": "grape",
 }
 
 _HEX_COLOR = re.compile(r"^#[0-9A-Fa-f]{6}$")
@@ -126,6 +91,7 @@ def normalize_config(raw: Any) -> dict[str, Any]:
     config = deepcopy(DEFAULT_CONFIG)
     if not isinstance(raw, dict):
         return config
+    raw = _migrate_config(raw)
 
     if isinstance(raw.get("enabled"), bool):
         config["enabled"] = raw["enabled"]
@@ -141,7 +107,7 @@ def normalize_config(raw: Any) -> dict[str, Any]:
         config["density"] = raw["density"]
     config["font_scale"] = _bounded_number(raw.get("font_scale"), 0.9, 1.2, 1.0)
     config["corner_radius"] = round(
-        _bounded_number(raw.get("corner_radius"), 8, 24, 16)
+        _bounded_number(raw.get("corner_radius"), 8, 24, 14)
     )
     if raw.get("motion") in {"system", "full", "reduced"}:
         config["motion"] = raw["motion"]
@@ -149,6 +115,30 @@ def normalize_config(raw: Any) -> dict[str, Any]:
         if isinstance(raw.get(key), bool):
             config[key] = raw[key]
     return config
+
+
+def _migrate_config(raw: dict[str, Any]) -> dict[str, Any]:
+    migrated = dict(raw)
+    version = raw.get("config_version")
+    if isinstance(version, int) and not isinstance(version, bool) and version >= 2:
+        return migrated
+
+    legacy_palette = raw.get("palette")
+    if legacy_palette in _LEGACY_PALETTES:
+        migrated["palette"] = _LEGACY_PALETTES[legacy_palette]
+
+    uses_legacy_default = (
+        legacy_palette in {None, "sunroom"}
+        and raw.get("color_mode") in {None, "follow_anki"}
+        and raw.get("custom_accent_enabled") in {None, False}
+        and raw.get("custom_accent") in {None, "#E66B2E"}
+    )
+    if uses_legacy_default:
+        migrated["color_mode"] = "light"
+        migrated["custom_accent"] = DEFAULT_CONFIG["custom_accent"]
+        migrated["corner_radius"] = DEFAULT_CONFIG["corner_radius"]
+        migrated["texture"] = DEFAULT_CONFIG["texture"]
+    return migrated
 
 
 def is_hex_color(value: Any) -> bool:
@@ -166,7 +156,11 @@ def theme_tokens(config: dict[str, Any], mode: str) -> dict[str, str]:
     )
     tokens.update(
         accent=accent,
-        accent_drop=mix_colors(accent, "#000000", 0.25 if mode == "light" else 0.32),
+        accent_drop=(
+            mix_colors(accent, "#000000", 0.28 if mode == "light" else 0.34)
+            if normalized["custom_accent_enabled"]
+            else palette["accent_drop"]
+        ),
         accent_soft=mix_colors(accent, tokens["card"], 0.78),
         focus=mix_colors(accent, "#FFFFFF", 0.58),
         shadow="#2B1A0A" if mode == "light" else "#080607",

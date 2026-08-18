@@ -26,8 +26,8 @@
     --lofi-row-block: 8px;
     --lofi-row-inline: 13px;
     --lofi-font: "Bricolage Grotesque", ui-rounded, "Avenir Next Rounded", "Trebuchet MS", sans-serif;
-    --lofi-soft-shadow: 0 18px 46px -28px color-mix(in srgb, var(--lofi-shadow) 54%, transparent);
-    --lofi-card-shadow: 0 10px 28px -22px color-mix(in srgb, var(--lofi-shadow) 50%, transparent);
+    --lofi-soft-shadow: 0 12px 28px -12px color-mix(in srgb, var(--lofi-shadow) 45%, transparent);
+    --lofi-card-shadow: 0 8px 16px -10px color-mix(in srgb, var(--lofi-shadow) 38%, transparent);
     color-scheme: light;
     font-size: calc(16px * var(--lofi-font-scale));
 }
@@ -80,12 +80,10 @@
 :root.lofi-town-theme[data-lofi-texture="on"] body {
     background-color: var(--lofi-bg);
     background-image:
-        radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--lofi-accent) 10%, transparent) 0 2px, transparent 3px),
-        radial-gradient(circle at 87% 72%, color-mix(in srgb, var(--lofi-accent) 8%, transparent) 0 1px, transparent 2px),
-        linear-gradient(135deg, color-mix(in srgb, var(--lofi-card) 22%, transparent) 25%, transparent 25%),
-        linear-gradient(315deg, color-mix(in srgb, var(--lofi-card) 16%, transparent) 25%, transparent 25%);
-    background-position: 0 0, 0 0, 0 0, 18px 18px;
-    background-size: 72px 72px, 96px 96px, 36px 36px, 36px 36px;
+        radial-gradient(circle, color-mix(in srgb, var(--lofi-text-muted) 10%, transparent) 0 1px, transparent 1.5px),
+        radial-gradient(circle, color-mix(in srgb, var(--lofi-card) 45%, transparent) 0 1px, transparent 1.5px);
+    background-position: 0 0, 12px 12px;
+    background-size: 24px 24px;
 }
 
 :root.lofi-town-theme[data-lofi-texture="off"] body {
@@ -95,21 +93,31 @@
 /* Top toolbar */
 :root.lofi-town-theme[data-lofi-view="top-toolbar"] body {
     margin: 0;
-    padding: 6px 12px 9px;
+    padding: 7px 12px 10px;
 }
 
 :root.lofi-town-theme[data-lofi-view="top-toolbar"] .header {
     align-items: center;
-    border: 1px solid var(--lofi-border);
-    border-radius: calc(var(--lofi-radius) + 5px);
-    background: color-mix(in srgb, var(--lofi-surface) 94%, transparent);
-    box-shadow: var(--lofi-card-shadow);
+    border: 0;
+    background: transparent;
+    box-shadow: none;
     min-height: 42px;
+}
+
+:root.lofi-town-theme[data-lofi-view="top-toolbar"] body.fancy .toolbar,
+:root.lofi-town-theme[data-lofi-view="top-toolbar"] body.fancy:not(.flat) .toolbar {
+    border: 1px solid var(--lofi-border);
+    border-radius: var(--lofi-radius);
+    background: var(--lofi-surface);
+    box-shadow: var(--lofi-card-shadow);
+    padding: 4px;
 }
 
 :root.lofi-town-theme[data-lofi-view="top-toolbar"]
     :is(#decks, #add, #browse, #stats, #sync) {
+    border: 0;
     border-radius: 999px;
+    background: transparent;
     color: var(--lofi-text-soft);
     font-weight: 750;
     margin: 4px 2px;
@@ -119,8 +127,17 @@
 }
 
 :root.lofi-town-theme[data-lofi-view="top-toolbar"]
+    body.fancy:not(.flat)
+    :is(#decks, #add, #browse, #stats, #sync) {
+    border: 0;
+    background: transparent;
+    color: var(--lofi-text-soft);
+}
+
+:root.lofi-town-theme[data-lofi-view="top-toolbar"]
     :is(#decks, #add, #browse, #stats, #sync):hover {
-    background: var(--lofi-secondary);
+    border: 0;
+    background: var(--lofi-hover);
     color: var(--lofi-text);
     transform: translateY(-1px);
 }
@@ -144,12 +161,12 @@
 :root.lofi-town-theme[data-lofi-view="deck-browser"] body > center > table {
     border: 1px solid var(--lofi-border);
     border-collapse: separate;
-    border-radius: calc(var(--lofi-radius) + 6px);
+    border-radius: var(--lofi-radius);
     border-spacing: 0 3px;
     box-shadow: var(--lofi-soft-shadow);
     box-sizing: border-box;
-    background: color-mix(in srgb, var(--lofi-card) 95%, transparent);
-    padding: 16px;
+    background: var(--lofi-card);
+    padding: 14px;
     width: min(100%, 940px);
 }
 
@@ -179,11 +196,12 @@
 }
 
 :root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck:hover td {
-    background: var(--lofi-secondary);
+    background: var(--lofi-hover);
 }
 
 :root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck.current td {
     background: var(--lofi-accent);
+    box-shadow: inset 0 -4px 0 var(--lofi-accent-drop);
     color: #fffaf0;
 }
 
@@ -270,10 +288,10 @@
 
 :root.lofi-town-theme[data-lofi-view="overview"] body > center {
     border: 1px solid var(--lofi-border);
-    border-radius: calc(var(--lofi-radius) + 8px);
+    border-radius: var(--lofi-radius);
     box-shadow: var(--lofi-soft-shadow);
     box-sizing: border-box;
-    background: color-mix(in srgb, var(--lofi-card) 96%, transparent);
+    background: var(--lofi-card);
     margin-inline: auto;
     max-width: 680px;
     padding: clamp(24px, 5vw, 46px);
@@ -328,10 +346,10 @@
 
 :root.lofi-town-theme[data-lofi-view="congrats"] .congrats {
     border: 1px solid var(--lofi-border);
-    border-radius: calc(var(--lofi-radius) + 8px);
+    border-radius: var(--lofi-radius);
     box-shadow: var(--lofi-soft-shadow);
     box-sizing: border-box;
-    background: color-mix(in srgb, var(--lofi-card) 96%, transparent);
+    background: var(--lofi-card);
     margin: 0 auto;
     max-width: 680px;
     padding: clamp(26px, 6vw, 52px);
@@ -389,7 +407,7 @@
 
 :root.lofi-town-theme[data-lofi-view="overview-controls"] #outer button:hover,
 :root.lofi-town-theme[data-lofi-view="bottom-toolbar"] #outer button:hover {
-    background: var(--lofi-secondary);
+    background: var(--lofi-hover);
 }
 
 :root.lofi-town-theme[data-lofi-view="overview-controls"] #outer button:active,
@@ -407,7 +425,7 @@
 
 :root.lofi-town-theme[data-lofi-view="review-controls"] #outer button:not(#ankihub-view-note-button) {
     border: 1px solid var(--lofi-border);
-    border-radius: calc(var(--lofi-radius) - 4px);
+    border-radius: max(10px, calc(var(--lofi-radius) - 4px));
     box-shadow: 0 4px 0 color-mix(in srgb, var(--lofi-border) 68%, var(--lofi-shadow));
     background: var(--lofi-card);
     color: var(--lofi-text);
@@ -468,7 +486,7 @@
 :root.lofi-town-theme[data-lofi-view="review-controls"] #ankihub-view-note-button {
     border: 1px solid var(--lofi-border);
     border-radius: 999px;
-    background: var(--lofi-secondary);
+    background: var(--lofi-hover);
     color: var(--lofi-text-soft);
     font-weight: 750;
     margin: 9px 5px;
@@ -484,7 +502,7 @@
 
 :root.lofi-town-theme[data-lofi-view="reviewer"][data-lofi-review-backdrop="on"] #qa {
     border: 1px solid var(--lofi-border);
-    border-radius: calc(var(--lofi-radius) + 8px);
+    border-radius: var(--lofi-radius);
     box-shadow: var(--lofi-soft-shadow);
     box-sizing: border-box;
     background: var(--lofi-card);

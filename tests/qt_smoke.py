@@ -8,7 +8,9 @@ os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
 
 from aqt.qt import QApplication, QMainWindow, QTimer, QUrl, QWebEnginePage
 
+from addon.configuration import DEFAULT_CONFIG
 from addon.dock import LofiTownDock
+from addon.settings_dialog import ThemeSettingsDialog
 from addon.state import DEFAULT_STATE
 
 
@@ -51,6 +53,21 @@ def main() -> None:
                 assert dock.stack.currentWidget() is dock.webview
                 dock.webview.bridge.getOAuthCallbackUrl()
                 assert dock.webview.bridge._callback_server.running
+
+                saved_themes: list[dict[str, object]] = []
+                settings = ThemeSettingsDialog(
+                    window,
+                    DEFAULT_CONFIG,
+                    dark_mode=True,
+                    ankihub_installed=False,
+                    save=saved_themes.append,
+                )
+                settings._palette_buttons["grape"].click()
+                assert settings._draft["palette"] == "grape"
+                settings._save_and_close()
+                assert saved_themes[0]["palette"] == "grape"
+                settings.deleteLater()
+
                 dock.dispose()
                 assert not dock.webview.bridge._callback_server.running
                 dock.deleteLater()

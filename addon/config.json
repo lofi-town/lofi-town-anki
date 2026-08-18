@@ -6,17 +6,17 @@
   "geometry": "",
   "zoom_factor": 1.0,
   "theme": {
-    "config_version": 1,
+    "config_version": 2,
     "enabled": true,
-    "palette": "sunroom",
-    "color_mode": "follow_anki",
+    "palette": "tangerine",
+    "color_mode": "light",
     "custom_accent_enabled": false,
-    "custom_accent": "#E66B2E",
+    "custom_accent": "#F2762E",
     "density": "cozy",
     "font_scale": 1.0,
-    "corner_radius": 16,
+    "corner_radius": 14,
     "motion": "system",
-    "texture": true,
+    "texture": false,
     "review_backdrop": false,
     "native_window": true
   }

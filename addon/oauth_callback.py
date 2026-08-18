@@ -134,9 +134,7 @@ class OAuthCallbackServer:
 
     def _accept_request(self, request_target: str) -> CallbackOutcome:
         if len(request_target) > MAX_REQUEST_TARGET_LENGTH:
-            return CallbackOutcome.retry(
-                414, "The sign-in response was too large."
-            )
+            return CallbackOutcome.retry(414, "The sign-in response was too large.")
 
         parsed = urlsplit(request_target)
         with self._lock:
@@ -145,9 +143,7 @@ class OAuthCallbackServer:
             server = self._server
 
         if server is None or completed:
-            return CallbackOutcome.retry(
-                410, "This sign-in request has expired."
-            )
+            return CallbackOutcome.retry(410, "This sign-in request has expired.")
         if parsed.path != callback_path:
             return CallbackOutcome.retry(
                 404, "This is not the active Lofi Town sign-in request."
@@ -161,9 +157,7 @@ class OAuthCallbackServer:
                 max_num_fields=20,
             )
         except ValueError:
-            return CallbackOutcome.retry(
-                400, "The sign-in response was invalid."
-            )
+            return CallbackOutcome.retry(400, "The sign-in response was invalid.")
 
         code_values = query.get("code", [])
         error_values = query.get("error", [])
@@ -184,9 +178,7 @@ class OAuthCallbackServer:
             not value or len(value) > MAX_CALLBACK_VALUE_LENGTH
             for value in selected.values()
         ):
-            return CallbackOutcome.retry(
-                400, "The sign-in response was invalid."
-            )
+            return CallbackOutcome.retry(400, "The sign-in response was invalid.")
 
         port = server.server_address[1]
         callback_url = urlunsplit(
@@ -260,7 +252,7 @@ class OAuthCallbackServer:
             )
         )
         return (
-            "<!doctype html><html lang=\"en\"><meta charset=\"utf-8\">"
+            '<!doctype html><html lang="en"><meta charset="utf-8">'
             '<meta name="viewport" content="width=device-width,initial-scale=1">'
             f"<title>{html.escape(title)}</title><style>{style}</style>"
             f'<main><div class="mark">{mark}</div>'

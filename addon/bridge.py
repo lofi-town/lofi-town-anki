@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 
 from aqt.qt import (
     QDesktopServices,
@@ -10,7 +10,9 @@ from aqt.qt import (
     QObject,
     QUrl,
     QWebEnginePage,
+    QWebEngineProfile,
     QWebEngineScript,
+    QWebEngineScriptCollection,
     pyqtSignal,
     pyqtSlot,
 )
@@ -79,12 +81,8 @@ def install_bridge(page: QWebEnginePage, bridge: NativeBridge) -> QWebChannel:
     channel = QWebChannel(page)
     channel.registerObject("lofiTownAnki", bridge)
     page.setWebChannel(channel)
-    profile = page.profile()
-    if profile is None:
-        raise RuntimeError("Could not access the Lofi Town web profile.")
-    scripts = profile.scripts()
-    if scripts is None:
-        raise RuntimeError("Could not access the Lofi Town web scripts.")
+    profile = cast(QWebEngineProfile, page.profile())
+    scripts = cast(QWebEngineScriptCollection, profile.scripts())
     scripts.insert(_bridge_script())
     return channel
 

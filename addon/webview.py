@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from pathlib import Path
+from typing import cast
 
 from aqt.qt import (
     QDesktopServices,
@@ -105,16 +106,13 @@ class LofiWebView(QWebEngineView):
     def dispose(self) -> None:
         self.bridge.shutdown()
         self.stop()
-        old_page = self.page()
+        old_page = cast(QWebEnginePage, self.page())
         self.setPage(QWebEnginePage(self))
-        if old_page is not None:
-            old_page.deleteLater()
+        old_page.deleteLater()
         self.profile.deleteLater()
 
     def _configure_settings(self) -> None:
-        settings = self.settings()
-        if settings is None:
-            raise RuntimeError("Could not access the Lofi Town web settings.")
+        settings = cast(QWebEngineSettings, self.settings())
         attributes = QWebEngineSettings.WebAttribute
         values = {
             attributes.JavascriptEnabled: True,

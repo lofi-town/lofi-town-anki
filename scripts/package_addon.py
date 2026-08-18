@@ -16,6 +16,7 @@ REQUIRED_FILES = {
     "resources/lofitownicon.png",
     "resources/fonts/BricolageGrotesque.ttf",
     "resources/licenses/OFL.txt",
+    "web/cozy.css",
     "user_files/README.txt",
 }
 

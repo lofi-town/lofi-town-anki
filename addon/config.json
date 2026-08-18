@@ -4,5 +4,20 @@
   "width": 460,
   "floating": false,
   "geometry": "",
-  "zoom_factor": 1.0
+  "zoom_factor": 1.0,
+  "theme": {
+    "config_version": 1,
+    "enabled": true,
+    "palette": "sunroom",
+    "color_mode": "follow_anki",
+    "custom_accent_enabled": false,
+    "custom_accent": "#E66B2E",
+    "density": "cozy",
+    "font_scale": 1.0,
+    "corner_radius": 16,
+    "motion": "system",
+    "texture": true,
+    "review_backdrop": false,
+    "native_window": true
+  }
 }

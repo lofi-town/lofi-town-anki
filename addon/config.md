@@ -1,6 +1,7 @@
 # Lofi Town settings
 
-The add-on updates these values as you move, resize, show, or hide the Lofi Town panel.
+Open **Tools > Lofi Town Appearance...** to customize Anki. The add-on also
+updates the panel values as you move, resize, show, or hide Lofi Town.
 
 - `visible`: Show the panel when the Anki profile opens.
 - `area`: Dock on the `left` or `right` side.
@@ -8,3 +9,8 @@ The add-on updates these values as you move, resize, show, or hide the Lofi Town
 - `floating`: Reopen as a floating panel.
 - `geometry`: Saved floating-window geometry.
 - `zoom_factor`: Web content scale, from 0.5 to 2.0.
+
+The `theme` section stores the selected room palette, color mode, spacing,
+text scale, corner radius, motion, texture, and optional review backdrop.
+Theme hooks only target Anki's built-in deck, overview, toolbar, and review
+control views. Card templates and AnkiHub-owned views are not modified.

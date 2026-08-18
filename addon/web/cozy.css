@@ -1,0 +1,548 @@
+@font-face {
+    font-family: "Bricolage Grotesque";
+    font-style: normal;
+    font-weight: 100 900;
+    src: url("../resources/fonts/BricolageGrotesque.ttf") format("truetype");
+}
+
+:root.lofi-town-theme {
+    --lofi-bg: var(--lofi-light-bg);
+    --lofi-surface: var(--lofi-light-surface);
+    --lofi-card: var(--lofi-light-card);
+    --lofi-border: var(--lofi-light-border);
+    --lofi-secondary: var(--lofi-light-secondary);
+    --lofi-text: var(--lofi-light-text);
+    --lofi-text-soft: var(--lofi-light-text-soft);
+    --lofi-text-muted: var(--lofi-light-text-muted);
+    --lofi-accent: var(--lofi-light-accent);
+    --lofi-accent-drop: var(--lofi-light-accent-drop);
+    --lofi-accent-soft: var(--lofi-light-accent-soft);
+    --lofi-focus: var(--lofi-light-focus);
+    --lofi-shadow: var(--lofi-light-shadow);
+    --lofi-positive: var(--lofi-light-positive);
+    --lofi-warning: var(--lofi-light-warning);
+    --lofi-negative: var(--lofi-light-negative);
+    --lofi-info: var(--lofi-light-info);
+    --lofi-row-block: 8px;
+    --lofi-row-inline: 13px;
+    --lofi-font: "Bricolage Grotesque", ui-rounded, "Avenir Next Rounded", "Trebuchet MS", sans-serif;
+    --lofi-soft-shadow: 0 18px 46px -28px color-mix(in srgb, var(--lofi-shadow) 54%, transparent);
+    --lofi-card-shadow: 0 10px 28px -22px color-mix(in srgb, var(--lofi-shadow) 50%, transparent);
+    color-scheme: light;
+    font-size: calc(16px * var(--lofi-font-scale));
+}
+
+:root.night-mode.lofi-town-theme:not([data-lofi-color-mode="light"]),
+:root.lofi-town-theme[data-lofi-color-mode="dark"] {
+    --lofi-bg: var(--lofi-dark-bg);
+    --lofi-surface: var(--lofi-dark-surface);
+    --lofi-card: var(--lofi-dark-card);
+    --lofi-border: var(--lofi-dark-border);
+    --lofi-secondary: var(--lofi-dark-secondary);
+    --lofi-text: var(--lofi-dark-text);
+    --lofi-text-soft: var(--lofi-dark-text-soft);
+    --lofi-text-muted: var(--lofi-dark-text-muted);
+    --lofi-accent: var(--lofi-dark-accent);
+    --lofi-accent-drop: var(--lofi-dark-accent-drop);
+    --lofi-accent-soft: var(--lofi-dark-accent-soft);
+    --lofi-focus: var(--lofi-dark-focus);
+    --lofi-shadow: var(--lofi-dark-shadow);
+    --lofi-positive: var(--lofi-dark-positive);
+    --lofi-warning: var(--lofi-dark-warning);
+    --lofi-negative: var(--lofi-dark-negative);
+    --lofi-info: var(--lofi-dark-info);
+    color-scheme: dark;
+}
+
+:root.lofi-town-theme[data-lofi-density="compact"] {
+    --lofi-row-block: 4px;
+    --lofi-row-inline: 10px;
+}
+
+:root.lofi-town-theme body {
+    color: var(--lofi-text);
+    font-family: var(--lofi-font);
+    font-weight: 600;
+}
+
+:root.lofi-town-theme body,
+:root.lofi-town-theme button,
+:root.lofi-town-theme input,
+:root.lofi-town-theme select {
+    font-family: var(--lofi-font);
+}
+
+:root.lofi-town-theme :focus-visible {
+    outline: 3px solid var(--lofi-focus);
+    outline-offset: 3px;
+}
+
+:root.lofi-town-theme[data-lofi-texture="on"] body {
+    background-color: var(--lofi-bg);
+    background-image:
+        radial-gradient(circle at 12% 18%, color-mix(in srgb, var(--lofi-accent) 10%, transparent) 0 2px, transparent 3px),
+        radial-gradient(circle at 87% 72%, color-mix(in srgb, var(--lofi-accent) 8%, transparent) 0 1px, transparent 2px),
+        linear-gradient(135deg, color-mix(in srgb, var(--lofi-card) 22%, transparent) 25%, transparent 25%),
+        linear-gradient(315deg, color-mix(in srgb, var(--lofi-card) 16%, transparent) 25%, transparent 25%);
+    background-position: 0 0, 0 0, 0 0, 18px 18px;
+    background-size: 72px 72px, 96px 96px, 36px 36px, 36px 36px;
+}
+
+:root.lofi-town-theme[data-lofi-texture="off"] body {
+    background: var(--lofi-bg);
+}
+
+/* Top toolbar */
+:root.lofi-town-theme[data-lofi-view="top-toolbar"] body {
+    margin: 0;
+    padding: 6px 12px 9px;
+}
+
+:root.lofi-town-theme[data-lofi-view="top-toolbar"] .header {
+    align-items: center;
+    border: 1px solid var(--lofi-border);
+    border-radius: calc(var(--lofi-radius) + 5px);
+    background: color-mix(in srgb, var(--lofi-surface) 94%, transparent);
+    box-shadow: var(--lofi-card-shadow);
+    min-height: 42px;
+}
+
+:root.lofi-town-theme[data-lofi-view="top-toolbar"]
+    :is(#decks, #add, #browse, #stats, #sync) {
+    border-radius: 999px;
+    color: var(--lofi-text-soft);
+    font-weight: 750;
+    margin: 4px 2px;
+    padding: 7px 13px;
+    text-decoration: none;
+    transition: background-color 120ms ease, color 120ms ease, transform 120ms ease;
+}
+
+:root.lofi-town-theme[data-lofi-view="top-toolbar"]
+    :is(#decks, #add, #browse, #stats, #sync):hover {
+    background: var(--lofi-secondary);
+    color: var(--lofi-text);
+    transform: translateY(-1px);
+}
+
+:root.lofi-town-theme[data-lofi-view="top-toolbar"] #sync-spinner {
+    filter: sepia(0.35) saturate(1.25);
+}
+
+/* Deck browser */
+:root.lofi-town-theme[data-lofi-view="deck-browser"] body {
+    box-sizing: border-box;
+    margin: 0;
+    padding: clamp(22px, 5vw, 62px) clamp(16px, 5vw, 70px) 28px;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] body > center {
+    margin-inline: auto;
+    max-width: 1040px;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] body > center > table {
+    border: 1px solid var(--lofi-border);
+    border-collapse: separate;
+    border-radius: calc(var(--lofi-radius) + 6px);
+    border-spacing: 0 3px;
+    box-shadow: var(--lofi-soft-shadow);
+    box-sizing: border-box;
+    background: color-mix(in srgb, var(--lofi-card) 95%, transparent);
+    padding: 16px;
+    width: min(100%, 940px);
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] th {
+    border: 0;
+    color: var(--lofi-text-muted);
+    font-size: 0.72rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    padding: 8px 12px 11px;
+    text-transform: uppercase;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck td {
+    border: 0;
+    background: transparent;
+    padding: var(--lofi-row-block) var(--lofi-row-inline);
+    transition: background-color 120ms ease, color 120ms ease;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck td:first-child {
+    border-radius: calc(var(--lofi-radius) - 5px) 0 0 calc(var(--lofi-radius) - 5px);
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck td:last-child {
+    border-radius: 0 calc(var(--lofi-radius) - 5px) calc(var(--lofi-radius) - 5px) 0;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck:hover td {
+    background: var(--lofi-secondary);
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck.current td {
+    background: var(--lofi-accent);
+    color: #fffaf0;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck.current a.deck,
+:root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck.current .collapse {
+    color: #fffaf0;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] a.deck {
+    color: var(--lofi-text);
+    font-size: 1rem;
+    font-weight: 760;
+    text-decoration: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] a.deck:hover {
+    text-decoration: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] .collapse {
+    color: var(--lofi-text-muted);
+    font-weight: 900;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"]
+    :is(.new-count, .learn-count, .review-count) {
+    border-radius: 999px;
+    display: inline-block;
+    font-size: 0.82rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+    min-width: 1.7em;
+    padding: 2px 7px;
+    text-align: center;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] .new-count {
+    background: color-mix(in srgb, var(--lofi-info) 15%, var(--lofi-card));
+    color: var(--lofi-info);
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] .learn-count {
+    background: color-mix(in srgb, var(--lofi-negative) 14%, var(--lofi-card));
+    color: var(--lofi-negative);
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] .review-count {
+    background: color-mix(in srgb, var(--lofi-positive) 15%, var(--lofi-card));
+    color: var(--lofi-positive);
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] tr.current :is(.new-count, .learn-count, .review-count) {
+    background: color-mix(in srgb, #ffffff 22%, transparent);
+    color: #fffaf0;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] .zero-count {
+    background: transparent;
+    color: var(--lofi-text-muted);
+    opacity: 0.56;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] .gears {
+    opacity: 0.72;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] #studiedToday {
+    border: 1px solid var(--lofi-border);
+    border-radius: 999px;
+    box-shadow: var(--lofi-card-shadow);
+    color: var(--lofi-text-soft);
+    display: inline-block;
+    margin: 22px 0 0;
+    padding: 9px 17px;
+    background: var(--lofi-surface);
+}
+
+/* Overview */
+:root.lofi-town-theme[data-lofi-view="overview"] body {
+    box-sizing: border-box;
+    margin: 0;
+    padding: clamp(26px, 7vw, 74px) 18px 32px;
+}
+
+:root.lofi-town-theme[data-lofi-view="overview"] body > center {
+    border: 1px solid var(--lofi-border);
+    border-radius: calc(var(--lofi-radius) + 8px);
+    box-shadow: var(--lofi-soft-shadow);
+    box-sizing: border-box;
+    background: color-mix(in srgb, var(--lofi-card) 96%, transparent);
+    margin-inline: auto;
+    max-width: 680px;
+    padding: clamp(24px, 5vw, 46px);
+}
+
+:root.lofi-town-theme[data-lofi-view="overview"] h3 {
+    color: var(--lofi-text);
+    font-size: clamp(1.65rem, 4vw, 2.4rem);
+    font-weight: 850;
+    letter-spacing: -0.035em;
+    margin: 0 0 10px;
+}
+
+:root.lofi-town-theme[data-lofi-view="overview"] .descfont {
+    color: var(--lofi-text-soft);
+    line-height: 1.6;
+}
+
+:root.lofi-town-theme[data-lofi-view="overview"] body > center > table {
+    border: 1px solid var(--lofi-border);
+    border-radius: var(--lofi-radius);
+    background: var(--lofi-surface);
+    margin-top: 22px;
+    max-width: 100%;
+    padding: 12px;
+}
+
+:root.lofi-town-theme[data-lofi-view="overview"] #study {
+    border: 0;
+    border-radius: 999px;
+    box-shadow: 0 5px 0 var(--lofi-accent-drop);
+    background: var(--lofi-accent);
+    color: #fffaf0;
+    font-size: 1rem;
+    font-weight: 850;
+    padding: 12px 24px;
+    transition: transform 100ms ease, box-shadow 100ms ease;
+}
+
+:root.lofi-town-theme[data-lofi-view="overview"] #study:active {
+    box-shadow: 0 1px 0 var(--lofi-accent-drop);
+    transform: translateY(4px);
+}
+
+/* Finished deck view */
+:root.lofi-town-theme[data-lofi-view="congrats"] body {
+    box-sizing: border-box;
+    margin: 0;
+    min-height: 100vh;
+    padding: clamp(28px, 8vh, 76px) 18px;
+}
+
+:root.lofi-town-theme[data-lofi-view="congrats"] .congrats {
+    border: 1px solid var(--lofi-border);
+    border-radius: calc(var(--lofi-radius) + 8px);
+    box-shadow: var(--lofi-soft-shadow);
+    box-sizing: border-box;
+    background: color-mix(in srgb, var(--lofi-card) 96%, transparent);
+    margin: 0 auto;
+    max-width: 680px;
+    padding: clamp(26px, 6vw, 52px);
+}
+
+:root.lofi-town-theme[data-lofi-view="congrats"] .congrats h1 {
+    color: var(--lofi-text);
+    font-size: clamp(1.65rem, 4vw, 2.4rem);
+    font-weight: 850;
+    letter-spacing: -0.035em;
+    margin: 0 0 12px;
+}
+
+:root.lofi-town-theme[data-lofi-view="congrats"] .congrats p {
+    color: var(--lofi-text-soft);
+    line-height: 1.6;
+}
+
+:root.lofi-town-theme[data-lofi-view="congrats"] .congrats a {
+    color: var(--lofi-accent);
+    font-weight: 800;
+}
+
+:root.lofi-town-theme[data-lofi-view="congrats"] .description {
+    border-color: var(--lofi-border);
+    border-radius: var(--lofi-radius);
+    background: var(--lofi-surface);
+}
+
+/* Bottom controls */
+:root.lofi-town-theme[data-lofi-view="overview-controls"] body,
+:root.lofi-town-theme[data-lofi-view="bottom-toolbar"] body,
+:root.lofi-town-theme[data-lofi-view="review-controls"] body {
+    background: var(--lofi-bg);
+}
+
+:root.lofi-town-theme[data-lofi-view="overview-controls"] #outer,
+:root.lofi-town-theme[data-lofi-view="bottom-toolbar"] #outer {
+    border: 0;
+    padding: 2px 10px 11px;
+}
+
+:root.lofi-town-theme[data-lofi-view="overview-controls"] #outer button,
+:root.lofi-town-theme[data-lofi-view="bottom-toolbar"] #outer button {
+    border: 1px solid var(--lofi-border);
+    border-radius: 999px;
+    box-shadow: 0 3px 0 color-mix(in srgb, var(--lofi-border) 78%, var(--lofi-shadow));
+    background: var(--lofi-surface);
+    color: var(--lofi-text-soft);
+    font-weight: 750;
+    margin: 5px;
+    padding: 8px 14px;
+    transition: transform 100ms ease, box-shadow 100ms ease, background-color 100ms ease;
+}
+
+:root.lofi-town-theme[data-lofi-view="overview-controls"] #outer button:hover,
+:root.lofi-town-theme[data-lofi-view="bottom-toolbar"] #outer button:hover {
+    background: var(--lofi-secondary);
+}
+
+:root.lofi-town-theme[data-lofi-view="overview-controls"] #outer button:active,
+:root.lofi-town-theme[data-lofi-view="bottom-toolbar"] #outer button:active {
+    box-shadow: 0 1px 0 var(--lofi-border);
+    transform: translateY(2px);
+}
+
+/* Review controls. The card HTML itself is intentionally untouched by default. */
+:root.lofi-town-theme[data-lofi-view="review-controls"] #outer {
+    border-color: var(--lofi-border);
+    background: var(--lofi-surface);
+    padding: 3px 8px 11px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #outer button:not(#ankihub-view-note-button) {
+    border: 1px solid var(--lofi-border);
+    border-radius: calc(var(--lofi-radius) - 4px);
+    box-shadow: 0 4px 0 color-mix(in srgb, var(--lofi-border) 68%, var(--lofi-shadow));
+    background: var(--lofi-card);
+    color: var(--lofi-text);
+    font-weight: 800;
+    margin: 9px 5px 5px;
+    min-width: 74px;
+    padding: 10px 13px;
+    transition: transform 100ms ease, box-shadow 100ms ease, filter 100ms ease;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #outer button:not(#ankihub-view-note-button):hover {
+    filter: brightness(1.035);
+    transform: translateY(-1px);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #outer button:not(#ankihub-view-note-button):active {
+    box-shadow: 0 1px 0 var(--lofi-border);
+    transform: translateY(3px);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #ansbut {
+    border-color: var(--lofi-accent);
+    box-shadow: 0 5px 0 var(--lofi-accent-drop);
+    background: var(--lofi-accent);
+    color: #fffaf0;
+    min-width: 150px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] button[data-ease="1"] {
+    border-color: color-mix(in srgb, var(--lofi-negative) 45%, var(--lofi-border));
+    background: color-mix(in srgb, var(--lofi-negative) 12%, var(--lofi-card));
+    color: var(--lofi-negative);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] button[data-ease="2"] {
+    border-color: color-mix(in srgb, var(--lofi-warning) 48%, var(--lofi-border));
+    background: color-mix(in srgb, var(--lofi-warning) 13%, var(--lofi-card));
+    color: var(--lofi-warning);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] button[data-ease="3"] {
+    border-color: color-mix(in srgb, var(--lofi-positive) 45%, var(--lofi-border));
+    background: color-mix(in srgb, var(--lofi-positive) 12%, var(--lofi-card));
+    color: var(--lofi-positive);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] button[data-ease="4"] {
+    border-color: color-mix(in srgb, var(--lofi-info) 44%, var(--lofi-border));
+    background: color-mix(in srgb, var(--lofi-info) 12%, var(--lofi-card));
+    color: var(--lofi-info);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] :is(.nobold, .stattxt) {
+    color: var(--lofi-text-muted);
+    font-weight: 650;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #ankihub-view-note-button {
+    border: 1px solid var(--lofi-border);
+    border-radius: 999px;
+    background: var(--lofi-secondary);
+    color: var(--lofi-text-soft);
+    font-weight: 750;
+    margin: 9px 5px;
+    padding: 8px 12px;
+}
+
+/* Optional review backdrop, never styles descendants inside #qa. */
+:root.lofi-town-theme[data-lofi-view="reviewer"][data-lofi-review-backdrop="on"] body {
+    box-sizing: border-box;
+    margin: 0;
+    padding: clamp(18px, 4vw, 44px);
+}
+
+:root.lofi-town-theme[data-lofi-view="reviewer"][data-lofi-review-backdrop="on"] #qa {
+    border: 1px solid var(--lofi-border);
+    border-radius: calc(var(--lofi-radius) + 8px);
+    box-shadow: var(--lofi-soft-shadow);
+    box-sizing: border-box;
+    background: var(--lofi-card);
+    margin-inline: auto;
+    max-width: 980px;
+    min-height: calc(100vh - clamp(36px, 8vw, 88px));
+    padding: clamp(22px, 5vw, 54px);
+}
+
+@keyframes lofi-town-rise {
+    from {
+        opacity: 0;
+        transform: translateY(7px) scale(0.992);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+:root.lofi-town-theme[data-lofi-motion="full"] body > center > table,
+:root.lofi-town-theme[data-lofi-motion="full"][data-lofi-view="overview"] body > center,
+:root.lofi-town-theme[data-lofi-motion="full"][data-lofi-view="congrats"] .congrats {
+    animation: lofi-town-rise 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+    :root.lofi-town-theme[data-lofi-motion="system"] body > center > table,
+    :root.lofi-town-theme[data-lofi-motion="system"][data-lofi-view="overview"] body > center,
+    :root.lofi-town-theme[data-lofi-motion="system"][data-lofi-view="congrats"] .congrats {
+        animation: lofi-town-rise 260ms cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+}
+
+:root.lofi-town-theme[data-lofi-motion="reduced"] *,
+:root.lofi-town-theme[data-lofi-motion="reduced"] *::before,
+:root.lofi-town-theme[data-lofi-motion="reduced"] *::after {
+    animation-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.001ms !important;
+}
+
+@media (max-width: 700px) {
+    :root.lofi-town-theme[data-lofi-view="deck-browser"] body {
+        padding: 16px 8px;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="deck-browser"] body > center > table {
+        border-radius: var(--lofi-radius);
+        padding: 8px 4px;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="deck-browser"] th,
+    :root.lofi-town-theme[data-lofi-view="deck-browser"] tr.deck td {
+        padding-inline: 6px;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="deck-browser"] .count {
+        min-width: 2.8em;
+    }
+}

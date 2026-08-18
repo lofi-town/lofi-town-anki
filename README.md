@@ -7,6 +7,9 @@ The official Lofi Town companion add-on keeps the live town beside your flashcar
 - Loads the full Lofi Town app from `https://app.lofi.town`.
 - Keeps sign-in, music, game state, and local storage in an isolated persistent browser profile.
 - Supports docked and floating layouts with remembered size and placement.
+- Gives Anki a customizable cozy appearance with four original room palettes.
+- Supports light and dark modes, spacing, text size, roundness, motion, and texture.
+- Keeps card templates and AnkiHub-owned views outside the theme boundary.
 - Opens Google and Discord sign-in in the system browser, then returns securely to Anki.
 - Never reads or sends decks, cards, answers, review counts, or collection data.
 
@@ -18,6 +21,7 @@ The add-on supports Anki 25.09.5 through 26.08.1 on macOS, Windows, and Linux.
 2. In Anki, choose **Tools > Add-ons > Install from file**.
 3. Select the package and restart Anki.
 4. Use **Tools > Lofi Town** to show or hide the panel.
+5. Use **Tools > Lofi Town Appearance...** to customize Anki.
 
 ## OAuth deployment prerequisite
 

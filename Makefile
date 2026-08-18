@@ -1,6 +1,7 @@
 PYTHON ?= python3
 VENV ?= .venv
 BIN := $(VENV)/bin
+RUN_PYTHON ?= $(BIN)/python
 
 .PHONY: help bootstrap lint typecheck test qt-smoke package check-package install-dev clean
 
@@ -21,25 +22,25 @@ bootstrap:
 	$(BIN)/python -m pip install -e '.[dev]'
 
 lint:
-	$(BIN)/ruff check addon tests scripts
+	$(RUN_PYTHON) -m ruff check addon tests scripts
 
 typecheck:
-	$(BIN)/mypy addon scripts
+	$(RUN_PYTHON) -m mypy addon scripts
 
 test:
-	$(BIN)/pytest
+	$(RUN_PYTHON) -m pytest
 
 qt-smoke:
-	PYTHONPATH=. QTWEBENGINE_DISABLE_SANDBOX=1 $(BIN)/python tests/qt_smoke.py
+	PYTHONPATH=. QTWEBENGINE_DISABLE_SANDBOX=1 $(RUN_PYTHON) tests/qt_smoke.py
 
 package:
-	$(BIN)/python scripts/package_addon.py
+	$(RUN_PYTHON) scripts/package_addon.py
 
 check-package: package
-	$(BIN)/python scripts/package_addon.py --check dist/lofi-town.ankiaddon
+	$(RUN_PYTHON) scripts/package_addon.py --check dist/lofi-town.ankiaddon
 
 install-dev:
-	$(BIN)/python scripts/install_dev.py
+	$(RUN_PYTHON) scripts/install_dev.py
 
 clean:
 	rm -rf .venv .pytest_cache .mypy_cache .ruff_cache dist

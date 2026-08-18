@@ -11,13 +11,13 @@ jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.10"
           cache: pip
       - run: python -m pip install -e '.[dev]'
-      - run: make lint typecheck test check-package VENV=/usr/local
+      - run: make lint typecheck test check-package RUN_PYTHON=python
 
   qt-smoke:
     runs-on: ubuntu-latest
@@ -26,11 +26,11 @@ jobs:
       matrix:
         aqt: ["25.9.5", "26.8.1"]
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
         with:
           python-version: "3.10"
           cache: pip
-      - run: sudo apt-get update && sudo apt-get install -y xvfb libegl1
+      - run: sudo apt-get update && sudo apt-get install -y libegl1
       - run: python -m pip install "aqt==${{ matrix.aqt }}"
-      - run: xvfb-run -a env PYTHONPATH=. QTWEBENGINE_DISABLE_SANDBOX=1 python tests/qt_smoke.py
+      - run: env PYTHONPATH=. QT_QPA_PLATFORM=offscreen QTWEBENGINE_DISABLE_SANDBOX=1 QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu python tests/qt_smoke.py

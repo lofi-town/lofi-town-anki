@@ -10,7 +10,7 @@ from aqt.qt import QAction, Qt, QTimer
 from aqt.theme import theme_manager
 from aqt.webview import AnkiWebView, WebContent
 
-from .compatibility import classify_context
+from .compatibility import classify_context, is_trusted_lofi_command
 from .configuration import normalize_config
 from .constants import ADDON_NAME
 from .dock import LofiTownDock
@@ -189,6 +189,16 @@ class AddonController:
         context: Any,
     ) -> tuple[bool, Any]:
         if handled[0] or not message.startswith("lofi-town:"):
+            return handled
+        completion_view = (
+            getattr(context, "web", None) is mw.web
+            and mw.web.url().path().rstrip("/") == "/congrats"
+        )
+        if not is_trusted_lofi_command(
+            message,
+            context,
+            completion_view=completion_view,
+        ):
             return handled
         if message == "lofi-town:open":
             self.show_lofi_town()

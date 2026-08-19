@@ -76,6 +76,10 @@ Get-FileHash .\lofi-town.ankiaddon -Algorithm SHA256
 Panel visibility, size, placement, zoom, settings, and the isolated Lofi Town
 browser profile are stored locally by the add-on.
 
+The embedded Lofi Town service uses its own account, cookie, and service data.
+See [PRIVACY.md](PRIVACY.md) and the
+[Lofi Town privacy policy](https://www.lofi.town/privacy-policy).
+
 ## Update
 
 Download the newest `lofi-town.ankiaddon` and repeat the installation steps.
@@ -89,6 +93,8 @@ Anki replaces the add-on code while preserving its local settings and
 3. Restart Anki.
 
 Removing the add-on does not delete or reschedule cards.
+Lofi Town account data is managed separately under the
+[Lofi Town privacy policy](https://www.lofi.town/privacy-policy).
 
 ## Features
 
@@ -108,6 +114,11 @@ Removing the add-on does not delete or reschedule cards.
 The add-on never sends decks, cards, answers, review counts, or collection data
 to Lofi Town. It never scans or writes the Anki collection. Session facts use
 reviewer events and counts that Anki already displays.
+
+The panel loads the Lofi Town web service. Its network requests and account
+data are governed by the [Lofi Town privacy policy](https://www.lofi.town/privacy-policy).
+Cookies, local storage, and cache files stay in the add-on's isolated local
+browser profile. See [PRIVACY.md](PRIVACY.md) for the complete data boundary.
 
 - Top-level panel navigation is restricted to `https://app.lofi.town`.
 - Public HTTPS links open in the system browser.
@@ -170,8 +181,8 @@ Before publishing a release:
    allowlist.
 2. Verify Google and Discord sign-in from a packaged add-on.
 3. Verify the live town connection from the packaged add-on.
-4. Update the version in `pyproject.toml`.
-5. Push a matching tag such as `v1.2.0`.
+4. Update `RELEASE_NOTES.md` and the version in `pyproject.toml`.
+5. Push a matching tag such as `v1.2.2`.
 
 The tag workflow runs the full checks and publishes `lofi-town.ankiaddon` and
 its SHA-256 checksum to GitHub Releases.

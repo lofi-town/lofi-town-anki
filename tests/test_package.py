@@ -14,6 +14,7 @@ def test_builds_flat_anki_addon_without_user_data(tmp_path: Path) -> None:
         names = archive.namelist()
     assert "manifest.json" in names
     assert "LICENSE" in names
+    assert "PRIVACY.md" in names
     assert "TRADEMARKS.md" in names
     assert "__init__.py" in names
     assert "resources/animations/cozy-bunny.gif" in names

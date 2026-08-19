@@ -13,6 +13,13 @@ _CONTEXT_VIEWS = {
     ("aqt.toolbar", "BottomToolbar"): "bottom-toolbar",
 }
 
+_REVIEW_CONTROL_COMMANDS = {
+    "lofi-town:open",
+    "lofi-town:pause-focus",
+    "lofi-town:resume-focus",
+    "lofi-town:restart-focus",
+}
+
 
 def classify_context(context: Any) -> str | None:
     if context is None or is_ankihub_context(context):
@@ -28,3 +35,15 @@ def is_ankihub_context(context: Any) -> bool:
         if "ankihub" in module or name.startswith("ankihub"):
             return True
     return False
+
+
+def is_trusted_lofi_command(
+    message: str,
+    context: Any,
+    *,
+    completion_view: bool = False,
+) -> bool:
+    view = classify_context(context)
+    if view == "review-controls":
+        return message in _REVIEW_CONTROL_COMMANDS
+    return view == "overview" and completion_view and message == "lofi-town:open"

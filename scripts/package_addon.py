@@ -11,6 +11,7 @@ ADDON_DIR = ROOT / "addon"
 DEFAULT_OUTPUT = ROOT / "dist" / "lofi-town.ankiaddon"
 REQUIRED_FILES = {
     "LICENSE",
+    "PRIVACY.md",
     "TRADEMARKS.md",
     "__init__.py",
     "manifest.json",
@@ -24,6 +25,7 @@ REQUIRED_FILES = {
 }
 ROOT_PACKAGE_FILES = {
     "LICENSE": ROOT / "LICENSE",
+    "PRIVACY.md": ROOT / "PRIVACY.md",
     "TRADEMARKS.md": ROOT / "TRADEMARKS.md",
 }
 

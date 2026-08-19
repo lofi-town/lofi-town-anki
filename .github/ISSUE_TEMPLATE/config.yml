@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security report
+    url: https://github.com/lofi-town/lofi-town-anki/security/advisories/new
+    about: Report suspected vulnerabilities privately.
+  - name: Installation guide
+    url: https://github.com/lofi-town/lofi-town-anki#install
+    about: Check the supported versions, installation steps, and troubleshooting guide.

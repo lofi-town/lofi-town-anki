@@ -10,6 +10,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ADDON_DIR = ROOT / "addon"
 DEFAULT_OUTPUT = ROOT / "dist" / "lofi-town.ankiaddon"
 REQUIRED_FILES = {
+    "LICENSE",
+    "TRADEMARKS.md",
     "__init__.py",
     "manifest.json",
     "config.json",
@@ -19,6 +21,10 @@ REQUIRED_FILES = {
     "resources/licenses/OFL.txt",
     "web/cozy.css",
     "user_files/README.txt",
+}
+ROOT_PACKAGE_FILES = {
+    "LICENSE": ROOT / "LICENSE",
+    "TRADEMARKS.md": ROOT / "TRADEMARKS.md",
 }
 
 
@@ -44,12 +50,22 @@ def build_archive(output: Path = DEFAULT_OUTPUT) -> Path:
     with zipfile.ZipFile(output, "w", zipfile.ZIP_DEFLATED, compresslevel=9) as archive:
         for path in package_files():
             relative = path.relative_to(ADDON_DIR).as_posix()
-            info = zipfile.ZipInfo(relative, date_time=(2026, 1, 1, 0, 0, 0))
-            info.compress_type = zipfile.ZIP_DEFLATED
-            info.external_attr = (stat.S_IFREG | 0o644) << 16
-            archive.writestr(info, path.read_bytes())
+            _write_archive_file(archive, relative, path.read_bytes())
+        for name, path in ROOT_PACKAGE_FILES.items():
+            _write_archive_file(archive, name, path.read_bytes())
     validate_archive(output)
     return output
+
+
+def _write_archive_file(
+    archive: zipfile.ZipFile,
+    name: str,
+    content: bytes,
+) -> None:
+    info = zipfile.ZipInfo(name, date_time=(2026, 1, 1, 0, 0, 0))
+    info.compress_type = zipfile.ZIP_DEFLATED
+    info.external_attr = (stat.S_IFREG | 0o644) << 16
+    archive.writestr(info, content)
 
 
 def validate_archive(path: Path) -> None:

@@ -33,6 +33,10 @@ def test_dynamic_bootstrap_is_limited_to_finished_deck_page() -> None:
     assert '!== "/congrats"' in script
     assert '"view":"congrats"' in script
     assert "/_addons/lofi_town_anki/web/cozy.css" in script
+    assert script.count("const root = document.documentElement;") == 2
+    assert 'attributeFilter: ["class"]' in script
+    assert 'document.querySelector(".congrats")' in script
+    assert "preserveCompletion.observe(document.documentElement" in script
     assert 'pycmd("lofi-town:open")' in script
 
 

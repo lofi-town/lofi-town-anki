@@ -272,24 +272,53 @@ def build_dynamic_bootstrap(
     document.head.appendChild(stylesheet);
   }}
   {apply_theme}
-  if (!{show_break_prompt}) return;
-  if (document.getElementById("lofi-town-completion")) return;
-  const card = document.createElement("section");
-  card.id = "lofi-town-completion";
-  card.setAttribute("aria-labelledby", "lofi-town-completion-title");
-  card.innerHTML = `
-    <span class="lofi-completion-eyebrow">LOFI.TOWN STUDY ROOM</span>
-    <h2 id="lofi-town-completion-title">Take a short reset.</h2>
-    <p>Step away for a few minutes, or continue when you are ready.</p>
-    <button id="lofi-town-completion-open" type="button">
-      Open Lofi Town</button>`;
-  const target = document.querySelector(".congrats") || document.body;
-  target.appendChild(card);
-  document.getElementById("lofi-town-completion-open").addEventListener(
-    "click",
-    () => {{
-      if (typeof pycmd === "function") pycmd("lofi-town:open");
+  const root = document.documentElement;
+  const preserveThemeClass = new MutationObserver(() => {{
+    if (!root.classList.contains("lofi-town-theme")) {{
+      root.classList.add("lofi-town-theme");
     }}
+  }});
+  preserveThemeClass.observe(root, {{
+    attributes: true,
+    attributeFilter: ["class"],
+  }});
+  window.addEventListener(
+    "pagehide",
+    () => preserveThemeClass.disconnect(),
+    {{ once: true }},
+  );
+  if (!{show_break_prompt}) return;
+  const installCompletion = () => {{
+    if (document.getElementById("lofi-town-completion")) return;
+    const target = document.querySelector(".congrats");
+    if (!target) return;
+    const card = document.createElement("section");
+    card.id = "lofi-town-completion";
+    card.setAttribute("aria-labelledby", "lofi-town-completion-title");
+    card.innerHTML = `
+      <span class="lofi-completion-eyebrow">LOFI.TOWN STUDY ROOM</span>
+      <h2 id="lofi-town-completion-title">Take a short reset.</h2>
+      <p>Step away for a few minutes, or continue when you are ready.</p>
+      <button id="lofi-town-completion-open" type="button">
+        Open Lofi Town</button>`;
+    target.appendChild(card);
+    document.getElementById("lofi-town-completion-open").addEventListener(
+      "click",
+      () => {{
+        if (typeof pycmd === "function") pycmd("lofi-town:open");
+      }}
+    );
+  }};
+  installCompletion();
+  const preserveCompletion = new MutationObserver(installCompletion);
+  preserveCompletion.observe(document.documentElement, {{
+    childList: true,
+    subtree: true,
+  }});
+  window.addEventListener(
+    "pagehide",
+    () => preserveCompletion.disconnect(),
+    {{ once: true }},
   );
 }})();
 """.strip()

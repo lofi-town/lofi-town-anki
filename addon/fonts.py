@@ -10,7 +10,7 @@ from aqt.qt import QFontDatabase
 def load_cozy_font_family() -> str | None:
     path = (
         Path(__file__).resolve().parent
-        / "resources/fonts/BricolageGrotesqueVariable.woff2"
+        / "resources/fonts/BricolageGrotesque.ttf"
     )
     font_id = QFontDatabase.addApplicationFont(str(path))
     families = QFontDatabase.applicationFontFamilies(font_id)

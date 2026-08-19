@@ -18,6 +18,7 @@ REQUIRED_FILES = {
     "config.json",
     "resources/animations/cozy-bunny.gif",
     "resources/lofitownicon.png",
+    "resources/fonts/BricolageGrotesque.ttf",
     "resources/fonts/BricolageGrotesqueVariable.woff2",
     "resources/licenses/OFL.txt",
     "web/cozy.css",

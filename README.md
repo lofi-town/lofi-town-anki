@@ -7,6 +7,17 @@ focus controls, review-session facts, and Lofi Town break handoffs.
 [Download the latest release](https://github.com/lofi-town/lofi-town-anki/releases/latest/download/lofi-town.ankiaddon)
 or [view all releases](https://github.com/lofi-town/lofi-town-anki/releases).
 
+<table>
+  <tr>
+    <td><img src="docs/images/lofi-town-panel.jpeg" alt="The live Lofi Town panel inside Anki" width="320"></td>
+    <td><img src="docs/images/settings.jpeg" alt="Lofi Town theme and study settings" width="640"></td>
+  </tr>
+  <tr>
+    <td align="center">Live town panel</td>
+    <td align="center">Optional Anki theme and study controls</td>
+  </tr>
+</table>
+
 ## Requirements
 
 - Anki Desktop 25.09.5 through 26.08.1.

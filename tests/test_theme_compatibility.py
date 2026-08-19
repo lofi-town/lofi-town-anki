@@ -46,6 +46,7 @@ def test_review_controls_are_the_only_source_for_session_commands() -> None:
         "lofi-town:pause-focus",
         "lofi-town:resume-focus",
         "lofi-town:restart-focus",
+        "lofi-town:take-break",
     }
 
     for command in commands:
@@ -64,6 +65,11 @@ def test_completion_screen_only_accepts_open_command() -> None:
     assert not is_trusted_lofi_command("lofi-town:open", overview)
     assert not is_trusted_lofi_command(
         "lofi-town:pause-focus",
+        overview,
+        completion_view=True,
+    )
+    assert not is_trusted_lofi_command(
+        "lofi-town:take-break",
         overview,
         completion_view=True,
     )

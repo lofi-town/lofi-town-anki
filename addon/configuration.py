@@ -5,7 +5,7 @@ from copy import deepcopy
 from typing import Any
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "config_version": 3,
+    "config_version": 4,
     "enabled": True,
     "palette": "tangerine",
     "color_mode": "light",
@@ -19,6 +19,7 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "review_backdrop": False,
     "native_window": True,
     "session_hud": True,
+    "sync_focus_with_lofi_town": False,
     "focus_minutes": 25,
     "review_focus_mode": False,
     "show_rating_shortcuts": True,
@@ -124,6 +125,7 @@ def normalize_config(raw: Any) -> dict[str, Any]:
         "review_backdrop",
         "native_window",
         "session_hud",
+        "sync_focus_with_lofi_town",
         "review_focus_mode",
         "show_rating_shortcuts",
         "lofi_town_breaks",

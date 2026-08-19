@@ -609,6 +609,30 @@
     font-weight: 800;
 }
 
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-sync {
+    border-radius: 999px;
+    background: var(--lofi-accent-soft);
+    color: var(--lofi-text-soft);
+    flex: 0 1 auto;
+    font-size: 0.68rem;
+    font-weight: 750;
+    max-width: 180px;
+    min-width: 0;
+    overflow: hidden;
+    padding: 3px 7px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-sync[hidden] {
+    display: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-sync[data-status="focusing"],
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-sync[data-status="paused"] {
+    color: var(--lofi-accent);
+}
+
 :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions {
     display: flex;
     flex: 0 0 auto;

@@ -13,24 +13,27 @@
 
 Keep the live Lofi Town beside your flashcards in a resizable Anki panel.
 
-![The live Lofi Town panel inside Anki](https://raw.githubusercontent.com/lofi-town/lofi-town-anki/v1.2.2/docs/images/lofi-town-panel.jpeg)
+![The live Lofi Town panel inside Anki](https://raw.githubusercontent.com/lofi-town/lofi-town-anki/v1.3.0/docs/images/lofi-town-panel.jpeg)
 
 ### Included
 
 - Dock Lofi Town on either side of Anki or pop it into a floating window.
 - Use optional 15, 25, or 50 minute focus blocks with pause and restart controls.
+- Opt in to private Lofi Town stopwatch sessions that begin after the first
+  answer and earn existing focus rewards.
 - See the current session's answer count and Anki's visible remaining-card count.
 - Choose optional light and dark Anki themes, quiet review mode, rating-key hints,
   reduced motion, and low-resource mode.
 - Sign in with Google or Discord through the system browser.
 
-![Lofi Town appearance and study settings](https://raw.githubusercontent.com/lofi-town/lofi-town-anki/v1.2.2/docs/images/settings.jpeg)
+![Lofi Town appearance and study settings](https://raw.githubusercontent.com/lofi-town/lofi-town-anki/v1.3.0/docs/images/settings.jpeg)
 
 ### Collection safety
 
 The add-on does not read, upload, edit, or reschedule decks, card content,
 answers, review history, or other collection data. It does not modify card
-templates or AnkiHub content.
+templates or AnkiHub content. Optional focus sync shares only focus-session
+intent and duration with Lofi Town.
 
 The panel loads the Lofi Town web service. See the
 [add-on privacy details](https://github.com/lofi-town/lofi-town-anki/blob/main/PRIVACY.md)

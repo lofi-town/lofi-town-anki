@@ -41,7 +41,7 @@ def test_dynamic_bootstrap_is_limited_to_finished_deck_page() -> None:
 
 
 def test_session_strip_uses_live_anki_counts_and_namespaced_actions() -> None:
-    session = {
+    session: dict[str, object] = {
         "startedAt": 1_000,
         "focusStartedAt": 1_000,
         "focusPausedAt": 0,
@@ -52,8 +52,10 @@ def test_session_strip_uses_live_anki_counts_and_namespaced_actions() -> None:
 
     assert '"answers":7' in script
     assert '".new-count", ".learn-count", ".review-count"' in script
-    assert '"lofi-town:open"' in script
+    assert '"lofi-town:take-break"' in script
     assert '"lofi-town:pause-focus"' in script
+    assert 'time.textContent = "Ready"' in script
+    assert "state.syncStatus" in script
     assert "collection" not in script.lower()
 
 

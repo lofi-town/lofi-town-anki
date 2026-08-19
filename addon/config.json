@@ -6,7 +6,7 @@
   "geometry": "",
   "zoom_factor": 1.0,
   "theme": {
-    "config_version": 3,
+    "config_version": 4,
     "enabled": true,
     "palette": "tangerine",
     "color_mode": "light",
@@ -20,6 +20,7 @@
     "review_backdrop": false,
     "native_window": true,
     "session_hud": true,
+    "sync_focus_with_lofi_town": false,
     "focus_minutes": 25,
     "review_focus_mode": false,
     "show_rating_shortcuts": true,

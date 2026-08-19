@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, Any, cast
 
 from aqt.qt import (
     QDesktopServices,
@@ -23,12 +23,18 @@ else:
     from aqt.qt import QWebChannel
 
 from .constants import BRIDGE_API_VERSION, OAUTH_TIMEOUT_SECONDS
+from .focus_sync import (
+    decode_focus_state,
+    normalize_focus_request,
+)
 from .oauth_callback import OAuthCallbackServer
 from .security import is_safe_external_url, is_safe_oauth_authorization_url
 
 
 class NativeBridge(QObject):
     oauthCallback = pyqtSignal(str)
+    focusRequestChanged = pyqtSignal(str)
+    focusStateReported = pyqtSignal(str)
 
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
@@ -36,6 +42,7 @@ class NativeBridge(QObject):
             self.oauthCallback.emit,
             timeout_seconds=OAUTH_TIMEOUT_SECONDS,
         )
+        self._focus_request: dict[str, object] | None = None
 
     @pyqtSlot(result="QString")
     def getOAuthCallbackUrl(self) -> str:
@@ -73,6 +80,29 @@ class NativeBridge(QObject):
             return _result(ok=False, message="Could not open the system browser.")
         return _result(ok=True)
 
+    @pyqtSlot(result="QString")
+    def getFocusRequest(self) -> str:
+        return _result(ok=True, value=self._focus_request)
+
+    @pyqtSlot(str, result="QString")
+    def reportFocusState(self, raw: str) -> str:
+        try:
+            state = decode_focus_state(raw)
+        except ValueError:
+            return _result(ok=False, message="The focus state was rejected.")
+        encoded = json.dumps(state, separators=(",", ":"), sort_keys=True)
+        self.focusStateReported.emit(encoded)
+        return _result(ok=True)
+
+    def set_focus_request(self, request: dict[str, object] | None) -> None:
+        self._focus_request = normalize_focus_request(request)
+        encoded = json.dumps(
+            self._focus_request,
+            separators=(",", ":"),
+            sort_keys=True,
+        )
+        self.focusRequestChanged.emit(encoded)
+
     def shutdown(self) -> None:
         self._callback_server.cancel()
 
@@ -90,7 +120,7 @@ def install_bridge(page: QWebEnginePage, bridge: NativeBridge) -> QWebChannel:
 def _result(
     *,
     ok: bool,
-    value: str | None = None,
+    value: Any = None,
     message: str | None = None,
 ) -> str:
     payload: dict[str, object] = {"ok": ok}
@@ -120,7 +150,8 @@ def _bridge_script() -> QWebEngineScript:
 def _bridge_javascript() -> str:
     return f"""
 (() => {{
-  const listeners = new Set();
+  const oauthListeners = new Set();
+  const focusListeners = new Set();
   let signalConnected = false;
   const ready = new Promise((resolve, reject) => {{
     try {{
@@ -133,7 +164,15 @@ def _bridge_javascript() -> str:
         if (!signalConnected) {{
           signalConnected = true;
           nativeBridge.oauthCallback.connect(value => {{
-            for (const listener of [...listeners]) listener(value);
+            for (const listener of [...oauthListeners]) listener(value);
+          }});
+          nativeBridge.focusRequestChanged.connect(raw => {{
+            try {{
+              const request = typeof raw === 'string' ? JSON.parse(raw) : raw;
+              for (const listener of [...focusListeners]) listener(request);
+            }} catch {{
+              // Native payloads are validated before emission.
+            }}
           }});
         }}
         resolve(nativeBridge);
@@ -177,10 +216,20 @@ def _bridge_javascript() -> str:
     openExternal: url => call('openExternal', [url]),
     onOAuthCallback: listener => {{
       if (typeof listener !== 'function') return () => {{}};
-      listeners.add(listener);
-      void ready.catch(() => listeners.delete(listener));
-      return () => listeners.delete(listener);
-    }}
+      oauthListeners.add(listener);
+      void ready.catch(() => oauthListeners.delete(listener));
+      return () => oauthListeners.delete(listener);
+    }},
+    getFocusRequest: async () =>
+      (await requireSuccess('getFocusRequest')).value ?? null,
+    onFocusRequest: listener => {{
+      if (typeof listener !== 'function') return () => {{}};
+      focusListeners.add(listener);
+      void ready.catch(() => focusListeners.delete(listener));
+      return () => focusListeners.delete(listener);
+    }},
+    reportFocusState: state =>
+      call('reportFocusState', [JSON.stringify(state)])
   }});
 
   Object.defineProperty(window, '__LOFI_TOWN_ANKI__', {{

@@ -218,6 +218,11 @@ class ThemeSettingsDialog(QDialog):
             self._focus_minutes,
             content,
         )
+        sync_row, self._sync_focus_with_lofi_town = self._toggle_setting(
+            "Sync focus time and rewards with Lofi Town",
+            "Starts a private Lofi Town stopwatch after your first answer.",
+            content,
+        )
         quiet_row, self._review_focus_mode = self._toggle_setting(
             "Quiet reviewer",
             "Reduce peripheral controls until you move to them.",
@@ -235,12 +240,14 @@ class ThemeSettingsDialog(QDialog):
         )
         self._study_flow_children = (
             focus_row,
+            sync_row,
             quiet_row,
             shortcut_row,
             break_row,
         )
         layout.addWidget(session_row)
         layout.addWidget(focus_row)
+        layout.addWidget(sync_row)
         layout.addWidget(quiet_row)
         layout.addWidget(shortcut_row)
         layout.addWidget(break_row)
@@ -422,6 +429,7 @@ class ThemeSettingsDialog(QDialog):
             slider.valueChanged.connect(self._on_control_change)
         for checkbox in (
             self._session_hud,
+            self._sync_focus_with_lofi_town,
             self._review_focus_mode,
             self._show_rating_shortcuts,
             self._lofi_town_breaks,
@@ -439,6 +447,9 @@ class ThemeSettingsDialog(QDialog):
             self._palette_buttons[config["palette"]].setChecked(True)
             self._custom_accent_enabled.setChecked(config["custom_accent_enabled"])
             self._session_hud.setChecked(config["session_hud"])
+            self._sync_focus_with_lofi_town.setChecked(
+                config["sync_focus_with_lofi_town"]
+            )
             self._set_combo(self._focus_minutes, config["focus_minutes"])
             self._review_focus_mode.setChecked(config["review_focus_mode"])
             self._show_rating_shortcuts.setChecked(
@@ -491,6 +502,9 @@ class ThemeSettingsDialog(QDialog):
             color_mode=self._color_mode.currentData(),
             custom_accent_enabled=self._custom_accent_enabled.isChecked(),
             session_hud=self._session_hud.isChecked(),
+            sync_focus_with_lofi_town=(
+                self._sync_focus_with_lofi_town.isChecked()
+            ),
             focus_minutes=self._focus_minutes.currentData(),
             review_focus_mode=self._review_focus_mode.isChecked(),
             show_rating_shortcuts=self._show_rating_shortcuts.isChecked(),

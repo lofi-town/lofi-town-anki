@@ -18,6 +18,7 @@ _REVIEW_CONTROL_COMMANDS = {
     "lofi-town:pause-focus",
     "lofi-town:resume-focus",
     "lofi-town:restart-focus",
+    "lofi-town:take-break",
 }
 
 

@@ -8,8 +8,8 @@ def test_tracks_answers_and_independent_focus_time() -> None:
     session = StudySession(clock=lambda: now[0])
 
     assert session.payload() == {
-        "startedAt": 100_000,
-        "focusStartedAt": 100_000,
+        "startedAt": 0,
+        "focusStartedAt": 0,
         "focusPausedAt": 0,
         "focusPausedTotal": 0,
         "answers": 0,
@@ -22,7 +22,7 @@ def test_tracks_answers_and_independent_focus_time() -> None:
     session.restart_focus_block()
 
     assert session.answers == 2
-    assert session.started_at_ms == 100_000
+    assert session.started_at_ms == 105_000
     assert session.focus_started_at_ms == 110_000
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import os
 import subprocess
 import sys
@@ -78,6 +79,35 @@ def run_smoke(addon_path: Path) -> None:
             assert dock.stack.currentWidget() is dock.webview
             dock.webview.bridge.getOAuthCallbackUrl()
             assert dock.webview.bridge._callback_server.running
+            review_session_id = "00000000-0000-4000-8000-000000000001"
+            focus_request = {
+                "reviewSessionId": review_session_id,
+                "desiredState": "focusing",
+                "focusMinutes": 25,
+            }
+            dock.webview.bridge.set_focus_request(focus_request)
+            assert json.loads(dock.webview.bridge.getFocusRequest())["value"] == (
+                focus_request
+            )
+            reported: list[str] = []
+            dock.webview.bridge.focusStateReported.connect(reported.append)
+            result = dock.webview.bridge.reportFocusState(
+                json.dumps(
+                    {
+                        "reviewSessionId": review_session_id,
+                        "status": "focusing",
+                        "ownedByAnki": True,
+                        "lofiSessionId": "lofi-session-1",
+                        "focusedMs": 12_000,
+                        "message": "Synced with Lofi Town",
+                    }
+                )
+            )
+            assert json.loads(result)["ok"]
+            assert json.loads(reported[0])["focusedMs"] == 12_000
+            assert not json.loads(
+                dock.webview.bridge.reportFocusState('{"answers":12}')
+            )["ok"]
 
             saved_themes: list[dict[str, object]] = []
             settings = ThemeSettingsDialog(
@@ -97,8 +127,10 @@ def run_smoke(addon_path: Path) -> None:
             settings._palette_buttons["grape"].click()
             assert settings._draft["palette"] == "grape"
             settings._set_combo(settings._focus_minutes, 50)
+            settings._sync_focus_with_lofi_town.click()
             settings._on_control_change()
             assert settings._draft["focus_minutes"] == 50
+            assert settings._draft["sync_focus_with_lofi_town"] is True
             assert not settings._preview_session.isHidden()
             settings._save_and_close()
             assert saved_themes[0]["palette"] == "grape"

@@ -1,9 +1,11 @@
 ## What changed
 
-- Restricted Lofi Town review controls to the Anki views that created them.
-- Added a clear privacy boundary between the add-on and the Lofi Town service.
-- Added Windows package and interface smoke coverage.
-- Added public contribution templates and automated security scanning.
+- Added opt-in focus sync with private Lofi Town stopwatch sessions.
+- Starts local and synced focus timing after the first answered card.
+- Synchronizes pause, resume, break, and reviewer-end actions only for sessions
+  created by the add-on.
+- Keeps existing Lofi Town focus sessions read-only and never sends card, deck,
+  rating, answer-count, or remaining-card data.
 
 ## Install or update
 

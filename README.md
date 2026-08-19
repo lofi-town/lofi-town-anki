@@ -106,6 +106,8 @@ Lofi Town account data is managed separately under the
   text size, roundness, motion, and texture.
 - Adds optional reviewer facts, answer-key hints, quiet reviewer mode, and
   pauseable 15, 25, or 50 minute focus blocks.
+- Can start a private Lofi Town stopwatch after the first answer, then sync
+  focus time, breaks, goals, tags, and existing Lofi Town rewards.
 - Reveals the existing Lofi Town panel after a focus block or completed deck.
 - Leaves card templates and AnkiHub-owned views unchanged.
 
@@ -113,7 +115,8 @@ Lofi Town account data is managed separately under the
 
 The add-on never sends decks, cards, answers, review counts, or collection data
 to Lofi Town. It never scans or writes the Anki collection. Session facts use
-reviewer events and counts that Anki already displays.
+reviewer events and counts that Anki already displays. If focus sync is enabled,
+the add-on shares only focus-session intent and duration with Lofi Town.
 
 The panel loads the Lofi Town web service. Its network requests and account
 data are governed by the [Lofi Town privacy policy](https://www.lofi.town/privacy-policy).
@@ -182,7 +185,7 @@ Before publishing a release:
 2. Verify Google and Discord sign-in from a packaged add-on.
 3. Verify the live town connection from the packaged add-on.
 4. Update `RELEASE_NOTES.md` and the version in `pyproject.toml`.
-5. Push a matching tag such as `v1.2.2`.
+5. Push a matching tag such as `v1.3.0`.
 
 The tag workflow runs the full checks and publishes `lofi-town.ankiaddon` and
 its SHA-256 checksum to GitHub Releases.

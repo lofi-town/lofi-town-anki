@@ -19,3 +19,8 @@ The optional study companion shows reviewer answer events and Anki's rendered
 New, Learn, and Review counts. It never queries or writes the collection. Focus
 blocks are non-modal and never reveal, answer, or reschedule cards. Lofi Town
 break prompts reveal the existing authenticated dock and can be disabled.
+
+`sync_focus_with_lofi_town` is an opt-in setting. When enabled, the first answer
+starts a private Lofi Town stopwatch. Pause, resume, break, and reviewer-end
+events synchronize with that owned session. Existing Lofi Town sessions remain
+read-only inside Anki.

@@ -50,7 +50,6 @@ class StudySession:
         self.answers = 0
 
     def payload(self) -> dict[str, int]:
-        self.start()
         return {
             "startedAt": self.started_at_ms,
             "focusStartedAt": self.focus_started_at_ms,

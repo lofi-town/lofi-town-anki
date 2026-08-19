@@ -73,7 +73,7 @@ def build_bootstrap(config: dict[str, Any], view: str) -> str:
 
 
 def build_session_bootstrap(
-    config: dict[str, Any], session: dict[str, int]
+    config: dict[str, Any], session: dict[str, object]
 ) -> str:
     normalized = normalize_config(config)
     payload = {
@@ -130,6 +130,7 @@ def build_session_bootstrap(
     const answerCount = document.getElementById("lofi-session-answers");
     const time = document.getElementById("lofi-session-time");
     const status = document.getElementById("lofi-session-status");
+    const sync = document.getElementById("lofi-session-sync");
     const pause = document.getElementById("lofi-session-pause");
     const restart = document.getElementById("lofi-session-restart");
     const openTown = document.getElementById("lofi-session-open-town");
@@ -138,9 +139,32 @@ def build_session_bootstrap(
     }}`;
     renderWorkload();
 
-    if (!state.focusMinutes) {{
-      time.textContent = `${{formatDuration(Date.now() - state.startedAt)}} elapsed`;
+    sync.hidden = !state.syncEnabled;
+    sync.textContent = state.syncMessage || "Lofi Town focus sync";
+    sync.dataset.status = state.syncStatus;
+    status.textContent = state.syncMessage || "";
+
+    if (!state.startedAt) {{
+      time.textContent = "Ready";
       pause.hidden = true;
+      restart.hidden = true;
+      openTown.hidden = true;
+      return;
+    }}
+
+    if (!state.focusMinutes) {{
+      const effectiveNow = state.focusPausedAt || Date.now();
+      const elapsed = Math.max(
+        0,
+        effectiveNow - state.focusStartedAt - state.focusPausedTotal
+      );
+      const suffix = state.focusPausedAt ? " · paused" : "";
+      time.textContent = `${{formatDuration(elapsed)}} elapsed${{suffix}}`;
+      pause.hidden = !state.syncEnabled
+        || state.syncStatus === "external"
+        || state.syncStatus === "ended";
+      pause.textContent = state.focusPausedAt ? "Resume" : "Pause";
+      pause.setAttribute("aria-pressed", state.focusPausedAt ? "true" : "false");
       restart.hidden = true;
       openTown.hidden = true;
       return;
@@ -154,7 +178,9 @@ def build_session_bootstrap(
     const remaining = state.focusMinutes * 60 * 1000 - elapsed;
     const complete = remaining <= 0;
     hud.classList.toggle("is-break-ready", complete);
-    pause.hidden = complete;
+    pause.hidden = complete
+      || state.syncStatus === "external"
+      || state.syncStatus === "ended";
     pause.textContent = state.focusPausedAt ? "Resume" : "Pause";
     pause.setAttribute("aria-pressed", state.focusPausedAt ? "true" : "false");
     restart.hidden = !complete;
@@ -169,7 +195,7 @@ def build_session_bootstrap(
     }} else {{
       const suffix = state.focusPausedAt ? " · paused" : "";
       time.textContent = `${{formatDuration(remaining)}} left${{suffix}}`;
-      status.textContent = "";
+      status.textContent = state.syncMessage || "";
       breakAnnounced = false;
     }}
   }};
@@ -190,6 +216,7 @@ def build_session_bootstrap(
         <span aria-hidden="true">·</span>
         <span id="lofi-session-workload">remaining hidden</span>
       </div>
+      <span id="lofi-session-sync" class="lofi-session-sync" hidden></span>
       <span id="lofi-session-time" class="lofi-session-time"></span>
       <div class="lofi-session-actions">
         <button id="lofi-session-pause" type="button"
@@ -216,7 +243,7 @@ def build_session_bootstrap(
     );
     document.getElementById("lofi-session-open-town").addEventListener(
       "click",
-      () => send("lofi-town:open")
+      () => send("lofi-town:take-break")
     );
     const remaining = readRemaining();
     observer = new MutationObserver(renderWorkload);

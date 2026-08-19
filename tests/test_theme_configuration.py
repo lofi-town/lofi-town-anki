@@ -61,7 +61,7 @@ def test_legacy_default_migrates_to_game_palette_in_light_mode() -> None:
         }
     )
 
-    assert config["config_version"] == 3
+    assert config["config_version"] == 4
     assert config["palette"] == "tangerine"
     assert config["color_mode"] == "light"
     assert config["custom_accent"] == "#F2762E"
@@ -93,6 +93,7 @@ def test_study_flow_settings_are_normalized() -> None:
     config = normalize_config(
         {
             "session_hud": False,
+            "sync_focus_with_lofi_town": True,
             "focus_minutes": 50,
             "review_focus_mode": True,
             "show_rating_shortcuts": False,
@@ -102,8 +103,16 @@ def test_study_flow_settings_are_normalized() -> None:
     )
 
     assert config["session_hud"] is False
+    assert config["sync_focus_with_lofi_town"] is True
     assert config["focus_minutes"] == 50
     assert config["review_focus_mode"] is True
     assert config["show_rating_shortcuts"] is False
     assert config["lofi_town_breaks"] is False
     assert config["low_resource"] is True
+
+
+def test_v3_config_migrates_focus_sync_to_opt_in() -> None:
+    config = normalize_config({"config_version": 3, "session_hud": True})
+
+    assert config["config_version"] == 4
+    assert config["sync_focus_with_lofi_town"] is False

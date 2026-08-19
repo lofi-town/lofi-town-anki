@@ -37,13 +37,12 @@ The add-on supports Anki 25.09.5 through 26.08.1 on macOS, Windows, and Linux.
 The medical-student forum research behind the study features is documented in
 [`research/med-student-anki-needs.md`](research/med-student-anki-needs.md).
 
-## OAuth deployment prerequisite
+## OAuth release prerequisite
 
-Google and Discord sign-in require the Lofi Town client runtime bridge to be deployed. Before distributing this add-on:
+The Lofi Town client runtime bridge is deployed. Before publishing a release:
 
-1. Merge and deploy the companion client PR.
-2. Add `http://127.0.0.1:*/**` to the Supabase authentication redirect allowlist.
-3. Verify both providers from a packaged add-on.
+1. Add `http://127.0.0.1:*/**` to the Supabase authentication redirect allowlist.
+2. Verify Google and Discord sign-in from a packaged add-on.
 
 Email sign-in continues to use the normal Lofi Town web flow.
 

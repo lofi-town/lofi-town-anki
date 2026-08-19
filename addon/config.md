@@ -1,6 +1,6 @@
 # Lofi Town settings
 
-Open **Tools > Lofi Town Appearance...** to customize Anki. The add-on also
+Open **Tools > Lofi Town Settings...** to customize Anki. The add-on also
 updates the panel values as you move, resize, show, or hide Lofi Town.
 
 - `visible`: Show the panel when the Anki profile opens.
@@ -14,3 +14,8 @@ The `theme` section stores the selected Lofi Town accent, color mode, spacing,
 text scale, corner radius, motion, texture, and optional review backdrop.
 Theme hooks only target Anki's built-in deck, overview, toolbar, and review
 control views. Card templates and AnkiHub-owned views are not modified.
+
+The optional study companion shows reviewer answer events and Anki's rendered
+New, Learn, and Review counts. It never queries or writes the collection. Focus
+blocks are non-modal and never reveal, answer, or reschedule cards. Lofi Town
+break prompts reveal the existing authenticated dock and can be disabled.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import sys
 from pathlib import Path
 from typing import Any
@@ -14,14 +15,20 @@ from .configuration import normalize_config
 from .constants import ADDON_NAME
 from .dock import LofiTownDock
 from .native_style import apply_native_style
+from .session import StudySession
 from .settings_dialog import ThemeSettingsDialog
 from .state import DockState, normalize_state
-from .web_assets import build_bootstrap, build_dynamic_bootstrap
+from .web_assets import (
+    build_bootstrap,
+    build_dynamic_bootstrap,
+    build_session_bootstrap,
+)
 
 
 class AddonController:
     def __init__(self) -> None:
         self.dock: LofiTownDock | None = None
+        self._session = StudySession()
         self._theme_config = self._read_theme_config()
         self._package = mw.addonManager.addonFromModule(__name__)
         mw.addonManager.setWebExports(
@@ -37,9 +44,9 @@ class AddonController:
         self.action.triggered.connect(self._toggle_dock)
         mw.form.menuTools.addAction(self.action)
 
-        self.appearance_action = QAction("Lofi Town Appearance...", mw)
+        self.appearance_action = QAction("Lofi Town Settings...", mw)
         self.appearance_action.setObjectName("lofiTownAppearanceAction")
-        self.appearance_action.setToolTip("Customize Anki's Lofi Town appearance")
+        self.appearance_action.setToolTip("Customize the Lofi Town study room")
         self.appearance_action.triggered.connect(self.open_theme_settings)
         mw.form.menuTools.addAction(self.appearance_action)
 
@@ -50,6 +57,9 @@ class AddonController:
         gui_hooks.webview_did_inject_style_into_page.append(
             self.on_webview_did_inject_style_into_page
         )
+        gui_hooks.webview_did_receive_js_message.append(self.on_js_message)
+        gui_hooks.reviewer_did_answer_card.append(self.on_reviewer_did_answer_card)
+        gui_hooks.reviewer_will_end.append(self.on_reviewer_will_end)
         gui_hooks.theme_did_change.append(self.apply_native_style)
 
     def on_profile_open(self) -> None:
@@ -91,6 +101,7 @@ class AddonController:
         self.apply_native_style()
 
     def on_profile_close(self) -> None:
+        self._session.reset()
         dock = self.dock
         if dock is None:
             return
@@ -132,6 +143,11 @@ class AddonController:
             return
         web_content.css.append(f"/_addons/{self._package}/web/cozy.css")
         web_content.head += build_bootstrap(self._theme_config, view)
+        if view == "review-controls" and self._theme_config["session_hud"]:
+            web_content.head += build_session_bootstrap(
+                self._theme_config,
+                self._session.payload(),
+            )
 
     def on_webview_did_inject_style_into_page(
         self,
@@ -150,6 +166,66 @@ class AddonController:
             )
         )
 
+    def on_reviewer_did_answer_card(
+        self,
+        reviewer: Any,
+        _card: Any,
+        _ease: int,
+    ) -> None:
+        if not self._theme_config["enabled"]:
+            return
+        if not self._theme_config["session_hud"]:
+            return
+        self._session.record_answer()
+        self._update_session_web(reviewer)
+
+    def on_reviewer_will_end(self, *_args: Any) -> None:
+        self._session.reset()
+
+    def on_js_message(
+        self,
+        handled: tuple[bool, Any],
+        message: str,
+        context: Any,
+    ) -> tuple[bool, Any]:
+        if handled[0] or not message.startswith("lofi-town:"):
+            return handled
+        if message == "lofi-town:open":
+            self.show_lofi_town()
+            return (True, None)
+        if not self._theme_config["enabled"]:
+            return handled
+        if not self._theme_config["session_hud"]:
+            return handled
+        if message == "lofi-town:pause-focus":
+            self._session.pause_focus()
+        elif message == "lofi-town:resume-focus":
+            self._session.resume_focus()
+        elif message == "lofi-town:restart-focus":
+            self._session.restart_focus_block()
+        else:
+            return handled
+        self._update_session_web(context)
+        return (True, None)
+
+    def show_lofi_town(self) -> None:
+        if self.dock is None:
+            return
+        self.dock.show()
+        self.dock.raise_()
+        self.action.setChecked(True)
+
+    def _update_session_web(self, context: Any) -> None:
+        bottom = getattr(context, "bottom", None)
+        web = getattr(bottom, "web", None)
+        if web is None:
+            reviewer = getattr(mw, "reviewer", None)
+            web = getattr(getattr(reviewer, "bottom", None), "web", None)
+        if web is None:
+            return
+        payload = json.dumps(self._session.payload(), separators=(",", ":"))
+        web.eval(f"window.__lofiTownSession?.update({payload});")
+
     def apply_native_style(self, *_args: Any) -> None:
         apply_native_style(mw, self._theme_config, theme_manager.night_mode)
 
@@ -159,6 +235,8 @@ class AddonController:
 
     def _write_theme_config(self, config: dict[str, Any]) -> None:
         self._theme_config = normalize_config(config)
+        if not self._theme_config["session_hud"]:
+            self._session.reset()
         current: dict[str, Any] = mw.addonManager.getConfig(__name__) or {}
         current["theme"] = self._theme_config
         mw.addonManager.writeConfig(__name__, current)

@@ -5,7 +5,7 @@ from copy import deepcopy
 from typing import Any
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "config_version": 2,
+    "config_version": 3,
     "enabled": True,
     "palette": "tangerine",
     "color_mode": "light",
@@ -18,6 +18,12 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "texture": False,
     "review_backdrop": False,
     "native_window": True,
+    "session_hud": True,
+    "focus_minutes": 25,
+    "review_focus_mode": False,
+    "show_rating_shortcuts": True,
+    "lofi_town_breaks": True,
+    "low_resource": False,
 }
 
 _LIGHT_BASE = {
@@ -111,7 +117,18 @@ def normalize_config(raw: Any) -> dict[str, Any]:
     )
     if raw.get("motion") in {"system", "full", "reduced"}:
         config["motion"] = raw["motion"]
-    for key in ("texture", "review_backdrop", "native_window"):
+    if raw.get("focus_minutes") in {0, 15, 25, 50}:
+        config["focus_minutes"] = raw["focus_minutes"]
+    for key in (
+        "texture",
+        "review_backdrop",
+        "native_window",
+        "session_hud",
+        "review_focus_mode",
+        "show_rating_shortcuts",
+        "lofi_town_breaks",
+        "low_resource",
+    ):
         if isinstance(raw.get(key), bool):
             config[key] = raw[key]
     return config
@@ -120,7 +137,7 @@ def normalize_config(raw: Any) -> dict[str, Any]:
 def _migrate_config(raw: dict[str, Any]) -> dict[str, Any]:
     migrated = dict(raw)
     version = raw.get("config_version")
-    if isinstance(version, int) and not isinstance(version, bool) and version >= 2:
+    if isinstance(version, int) and not isinstance(version, bool) and version >= 3:
         return migrated
 
     legacy_palette = raw.get("palette")
@@ -156,6 +173,7 @@ def theme_tokens(config: dict[str, Any], mode: str) -> dict[str, str]:
     )
     tokens.update(
         accent=accent,
+        accent_text=contrast_text(accent),
         accent_drop=(
             mix_colors(accent, "#000000", 0.28 if mode == "light" else 0.34)
             if normalized["custom_accent_enabled"]
@@ -180,6 +198,31 @@ def mix_colors(foreground: str, background: str, background_ratio: float) -> str
         round(a * (1 - ratio) + b * ratio) for a, b in zip(fg, bg, strict=False)
     )
     return "#" + "".join(f"{channel:02X}" for channel in mixed)
+
+
+def contrast_text(background: str) -> str:
+    options = ("#24170D", "#FFFAF0")
+    return max(options, key=lambda color: _contrast_ratio(background, color))
+
+
+def _contrast_ratio(first: str, second: str) -> float:
+    lighter, darker = sorted(
+        (_relative_luminance(first), _relative_luminance(second)),
+        reverse=True,
+    )
+    return (lighter + 0.05) / (darker + 0.05)
+
+
+def _relative_luminance(color: str) -> float:
+    channels = []
+    for channel in _hex_to_rgb(color):
+        normalized = channel / 255
+        channels.append(
+            normalized / 12.92
+            if normalized <= 0.04045
+            else ((normalized + 0.055) / 1.055) ** 2.4
+        )
+    return 0.2126 * channels[0] + 0.7152 * channels[1] + 0.0722 * channels[2]
 
 
 def _hex_to_rgb(value: str) -> tuple[int, int, int]:

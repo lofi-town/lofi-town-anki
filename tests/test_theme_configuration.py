@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from addon.configuration import (
     DEFAULT_CONFIG,
+    contrast_text,
     is_hex_color,
     mix_colors,
     normalize_config,
@@ -17,6 +18,7 @@ def test_invalid_values_fall_back_and_numbers_are_bounded() -> None:
             "font_scale": 4,
             "corner_radius": -3,
             "custom_accent": "red",
+            "focus_minutes": 30,
         }
     )
 
@@ -25,6 +27,7 @@ def test_invalid_values_fall_back_and_numbers_are_bounded() -> None:
     assert config["font_scale"] == 1.2
     assert config["corner_radius"] == 8
     assert config["custom_accent"] == DEFAULT_CONFIG["custom_accent"]
+    assert config["focus_minutes"] == DEFAULT_CONFIG["focus_minutes"]
 
 
 def test_valid_custom_accent_is_normalized_and_used() -> None:
@@ -58,7 +61,7 @@ def test_legacy_default_migrates_to_game_palette_in_light_mode() -> None:
         }
     )
 
-    assert config["config_version"] == 2
+    assert config["config_version"] == 3
     assert config["palette"] == "tangerine"
     assert config["color_mode"] == "light"
     assert config["custom_accent"] == "#F2762E"
@@ -83,3 +86,24 @@ def test_color_helpers_validate_and_mix() -> None:
     assert not is_hex_color("rgb(1, 2, 3)")
     assert mix_colors("#123456", "#ABCDEF", 0) == "#123456"
     assert mix_colors("#123456", "#ABCDEF", 1) == "#ABCDEF"
+    assert contrast_text("#F4B72A") == "#24170D"
+
+
+def test_study_flow_settings_are_normalized() -> None:
+    config = normalize_config(
+        {
+            "session_hud": False,
+            "focus_minutes": 50,
+            "review_focus_mode": True,
+            "show_rating_shortcuts": False,
+            "lofi_town_breaks": False,
+            "low_resource": True,
+        }
+    )
+
+    assert config["session_hud"] is False
+    assert config["focus_minutes"] == 50
+    assert config["review_focus_mode"] is True
+    assert config["show_rating_shortcuts"] is False
+    assert config["lofi_town_breaks"] is False
+    assert config["low_resource"] is True

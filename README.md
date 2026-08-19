@@ -10,9 +10,15 @@ The official Lofi Town companion add-on keeps the live town beside your flashcar
 - Gives Anki a customizable cozy appearance based on Lofi Town's cream, cocoa,
   and tangerine UI palette.
 - Supports light and dark modes, spacing, text size, roundness, motion, and texture.
+- Adds an optional reviewer strip with answer events, Anki's visible remaining
+  count, and pauseable focus blocks.
+- Offers quiet reviewer, rating-key hints, and low-resource modes.
+- Reveals the existing Lofi Town panel at focus and deck-completion breaks.
 - Keeps card templates and AnkiHub-owned views outside the theme boundary.
 - Opens Google and Discord sign-in in the system browser, then returns securely to Anki.
-- Never reads or sends decks, cards, answers, review counts, or collection data.
+- Never sends decks, cards, answers, review counts, or collection data to Lofi Town.
+- Never scans or writes the collection. Session facts come from reviewer events
+  and counts already rendered by Anki.
 
 The add-on supports Anki 25.09.5 through 26.08.1 on macOS, Windows, and Linux.
 
@@ -22,7 +28,10 @@ The add-on supports Anki 25.09.5 through 26.08.1 on macOS, Windows, and Linux.
 2. In Anki, choose **Tools > Add-ons > Install from file**.
 3. Select the package and restart Anki.
 4. Use **Tools > Lofi Town** to show or hide the panel.
-5. Use **Tools > Lofi Town Appearance...** to customize Anki.
+5. Use **Tools > Lofi Town Settings...** to customize Anki.
+
+The medical-student forum research behind the study features is documented in
+[`research/med-student-anki-needs.md`](research/med-student-anki-needs.md).
 
 ## OAuth deployment prerequisite
 
@@ -47,7 +56,8 @@ make install-dev
 
 `make install-dev` uses the standard Anki add-on directory for the current operating system. Set `ANKI_ADDONS_DIR` to override it.
 
-To run the Qt construction smoke test, install a supported `aqt` wheel in `.venv`, then run `make qt-smoke`.
+To run the Qt construction smoke test, install a supported `aqt[qt]` wheel in
+`.venv`, then run `make qt-smoke`.
 
 ## Security model
 

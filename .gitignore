@@ -2,10 +2,12 @@
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+.playwright-cli/
 __pycache__/
 *.py[cod]
 *.egg-info/
 dist/
+build/
 .DS_Store
 addon/user_files/*
 !addon/user_files/README.txt

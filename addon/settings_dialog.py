@@ -40,14 +40,16 @@ class ThemeSettingsDialog(QDialog):
         save: Callable[[dict[str, Any]], None],
     ) -> None:
         super().__init__(parent)
-        self._draft = normalize_config(config)
+        self._saved = normalize_config(config)
+        self._draft = deepcopy(self._saved)
         self._dark_mode = dark_mode
         self._save = save
         self._palette_buttons: dict[str, QPushButton] = {}
         self._resources_path = Path(__file__).resolve().parent / "resources"
+        self._loading_controls = False
 
         self.setObjectName("lofiTownSettings")
-        self.setWindowTitle("Lofi Town Appearance")
+        self.setWindowTitle("Lofi Town Settings")
         self.setMinimumSize(820, 610)
         self.resize(900, 650)
         if font_family := load_cozy_font_family():
@@ -121,6 +123,23 @@ class ThemeSettingsDialog(QDialog):
         study.setObjectName("previewStudy")
         study.setEnabled(False)
         scene_layout.addWidget(study)
+
+        self._preview_session = QFrame(scene)
+        self._preview_session.setObjectName("previewSession")
+        session_layout = QHBoxLayout(self._preview_session)
+        session_layout.setContentsMargins(11, 8, 11, 8)
+        session_layout.setSpacing(8)
+        session_brand = QLabel("LOFI.TOWN FOCUS", self._preview_session)
+        session_brand.setObjectName("previewSessionBrand")
+        session_facts = QLabel("7 answers · 12 remaining", self._preview_session)
+        session_facts.setObjectName("previewSessionFacts")
+        self._preview_session_time = QLabel("25:00 focus", self._preview_session)
+        self._preview_session_time.setObjectName("previewSessionTime")
+        session_layout.addWidget(session_brand)
+        session_layout.addWidget(session_facts)
+        session_layout.addStretch(1)
+        session_layout.addWidget(self._preview_session_time)
+        scene_layout.addWidget(self._preview_session)
         layout.addWidget(scene, 1)
 
         self._preview_panel = panel
@@ -143,7 +162,7 @@ class ThemeSettingsDialog(QDialog):
         layout.setContentsMargins(24, 22, 24, 16)
         layout.setSpacing(16)
 
-        title = QLabel("Appearance", content)
+        title = QLabel("Study room", content)
         title.setObjectName("title")
         layout.addWidget(title)
         if ankihub_installed:
@@ -151,7 +170,7 @@ class ThemeSettingsDialog(QDialog):
             status.setObjectName("compatibilityBadge")
             layout.addWidget(status, 0, Qt.AlignmentFlag.AlignLeft)
 
-        self._enabled = QCheckBox("Theme enabled", content)
+        self._enabled = QCheckBox("Study room enabled", content)
         self._enabled.setObjectName("masterToggle")
         layout.addWidget(self._enabled)
 
@@ -181,6 +200,50 @@ class ThemeSettingsDialog(QDialog):
         custom_layout.addWidget(self._custom_accent_enabled)
         custom_layout.addWidget(self._accent_button)
         layout.addWidget(custom_row)
+
+        layout.addWidget(self._section_label("Study flow", content))
+        session_row, self._session_hud = self._toggle_setting(
+            "Study companion",
+            "Show session facts and enable focus controls.",
+            content,
+        )
+        self._focus_minutes = QComboBox(content)
+        self._focus_minutes.addItem("Elapsed time only", 0)
+        self._focus_minutes.addItem("15 minute focus", 15)
+        self._focus_minutes.addItem("25 minute focus", 25)
+        self._focus_minutes.addItem("50 minute focus", 50)
+        focus_row = self._row_with_control(
+            "Focus block",
+            "A non-modal reminder that never stops review.",
+            self._focus_minutes,
+            content,
+        )
+        quiet_row, self._review_focus_mode = self._toggle_setting(
+            "Quiet reviewer",
+            "Reduce peripheral controls until you move to them.",
+            content,
+        )
+        shortcut_row, self._show_rating_shortcuts = self._toggle_setting(
+            "Rating key hints",
+            "Show 1, 2, 3, and 4 on answer buttons.",
+            content,
+        )
+        break_row, self._lofi_town_breaks = self._toggle_setting(
+            "Lofi Town break handoff",
+            "Reveal the town after a focus block or completed deck.",
+            content,
+        )
+        self._study_flow_children = (
+            focus_row,
+            quiet_row,
+            shortcut_row,
+            break_row,
+        )
+        layout.addWidget(session_row)
+        layout.addWidget(focus_row)
+        layout.addWidget(quiet_row)
+        layout.addWidget(shortcut_row)
+        layout.addWidget(break_row)
 
         layout.addWidget(self._section_label("Appearance", content))
         self._color_mode = QComboBox(content)
@@ -250,12 +313,14 @@ class ThemeSettingsDialog(QDialog):
         self._texture = QCheckBox("Paper texture", content)
         self._native_window = QCheckBox("Theme native window", content)
         self._review_backdrop = QCheckBox("Review backdrop", content)
+        self._low_resource = QCheckBox("Low-resource mode", content)
         self._review_backdrop.setToolTip(
             "Styles only the area around the card."
         )
         layout.addWidget(self._texture)
         layout.addWidget(self._native_window)
         layout.addWidget(self._review_backdrop)
+        layout.addWidget(self._low_resource)
         layout.addStretch(1)
 
         scroll.setWidget(content)
@@ -269,16 +334,19 @@ class ThemeSettingsDialog(QDialog):
         reset.setObjectName("resetButton")
         cancel = QPushButton("Cancel", footer)
         cancel.setObjectName("cancelButton")
-        save = QPushButton("Save", footer)
-        save.setObjectName("saveButton")
-        save.setDefault(True)
+        self._footer_status = QLabel("No unsaved changes", footer)
+        self._footer_status.setObjectName("footerStatus")
+        self._save_button = QPushButton("Save", footer)
+        self._save_button.setObjectName("saveButton")
+        self._save_button.setDefault(True)
         reset.clicked.connect(self._restore_defaults)
         cancel.clicked.connect(self.reject)
-        save.clicked.connect(self._save_and_close)
+        self._save_button.clicked.connect(self._save_and_close)
         footer_layout.addWidget(reset)
+        footer_layout.addWidget(self._footer_status)
         footer_layout.addStretch(1)
         footer_layout.addWidget(cancel)
-        footer_layout.addWidget(save)
+        footer_layout.addWidget(self._save_button)
         shell_layout.addWidget(footer)
         return shell
 
@@ -321,6 +389,20 @@ class ThemeSettingsDialog(QDialog):
         row_layout.addWidget(control)
         return row
 
+    def _toggle_setting(
+        self,
+        title: str,
+        description: str,
+        parent: QWidget,
+    ) -> tuple[QFrame, QCheckBox]:
+        row = self._setting_row(title, description, parent)
+        toggle = QCheckBox("On", row)
+        toggle.setObjectName("settingToggle")
+        toggle.setAccessibleName(title)
+        row_layout = cast(QHBoxLayout, row.layout())
+        row_layout.addWidget(toggle)
+        return row, toggle
+
     def _connect_controls(self) -> None:
         self._enabled.toggled.connect(self._on_control_change)
         for key, button in self._palette_buttons.items():
@@ -329,27 +411,53 @@ class ThemeSettingsDialog(QDialog):
             )
         self._custom_accent_enabled.toggled.connect(self._on_control_change)
         self._accent_button.clicked.connect(self._choose_accent)
-        for combo in (self._color_mode, self._density, self._motion):
+        for combo in (
+            self._focus_minutes,
+            self._color_mode,
+            self._density,
+            self._motion,
+        ):
             combo.currentIndexChanged.connect(self._on_control_change)
         for slider in (self._font_scale, self._corner_radius):
             slider.valueChanged.connect(self._on_control_change)
-        for checkbox in (self._texture, self._native_window, self._review_backdrop):
+        for checkbox in (
+            self._session_hud,
+            self._review_focus_mode,
+            self._show_rating_shortcuts,
+            self._lofi_town_breaks,
+            self._texture,
+            self._native_window,
+            self._review_backdrop,
+            self._low_resource,
+        ):
             checkbox.toggled.connect(self._on_control_change)
 
     def _load_controls(self, config: dict[str, Any]) -> None:
-        self._enabled.setChecked(config["enabled"])
-        self._palette_buttons[config["palette"]].setChecked(True)
-        self._custom_accent_enabled.setChecked(config["custom_accent_enabled"])
-        self._set_combo(self._color_mode, config["color_mode"])
-        self._set_combo(self._density, config["density"])
-        self._set_combo(self._motion, config["motion"])
-        self._font_scale.setValue(round(config["font_scale"] * 100))
-        self._corner_radius.setValue(config["corner_radius"])
-        self._texture.setChecked(config["texture"])
-        self._native_window.setChecked(config["native_window"])
-        self._review_backdrop.setChecked(config["review_backdrop"])
+        self._loading_controls = True
+        try:
+            self._enabled.setChecked(config["enabled"])
+            self._palette_buttons[config["palette"]].setChecked(True)
+            self._custom_accent_enabled.setChecked(config["custom_accent_enabled"])
+            self._session_hud.setChecked(config["session_hud"])
+            self._set_combo(self._focus_minutes, config["focus_minutes"])
+            self._review_focus_mode.setChecked(config["review_focus_mode"])
+            self._show_rating_shortcuts.setChecked(
+                config["show_rating_shortcuts"]
+            )
+            self._lofi_town_breaks.setChecked(config["lofi_town_breaks"])
+            self._set_combo(self._color_mode, config["color_mode"])
+            self._set_combo(self._density, config["density"])
+            self._set_combo(self._motion, config["motion"])
+            self._font_scale.setValue(round(config["font_scale"] * 100))
+            self._corner_radius.setValue(config["corner_radius"])
+            self._texture.setChecked(config["texture"])
+            self._native_window.setChecked(config["native_window"])
+            self._review_backdrop.setChecked(config["review_backdrop"])
+            self._low_resource.setChecked(config["low_resource"])
+        finally:
+            self._loading_controls = False
 
-    def _set_combo(self, combo: QComboBox, value: str) -> None:
+    def _set_combo(self, combo: QComboBox, value: Any) -> None:
         index = combo.findData(value)
         combo.setCurrentIndex(max(0, index))
 
@@ -367,6 +475,8 @@ class ThemeSettingsDialog(QDialog):
         self._on_control_change()
 
     def _on_control_change(self, *_args: Any) -> None:
+        if self._loading_controls:
+            return
         checked_palette = next(
             (
                 key
@@ -380,6 +490,11 @@ class ThemeSettingsDialog(QDialog):
             palette=checked_palette,
             color_mode=self._color_mode.currentData(),
             custom_accent_enabled=self._custom_accent_enabled.isChecked(),
+            session_hud=self._session_hud.isChecked(),
+            focus_minutes=self._focus_minutes.currentData(),
+            review_focus_mode=self._review_focus_mode.isChecked(),
+            show_rating_shortcuts=self._show_rating_shortcuts.isChecked(),
+            lofi_town_breaks=self._lofi_town_breaks.isChecked(),
             density=self._density.currentData(),
             font_scale=self._font_scale.value() / 100,
             corner_radius=self._corner_radius.value(),
@@ -387,6 +502,7 @@ class ThemeSettingsDialog(QDialog):
             texture=self._texture.isChecked(),
             native_window=self._native_window.isChecked(),
             review_backdrop=self._review_backdrop.isChecked(),
+            low_resource=self._low_resource.isChecked(),
         )
         self._draft = normalize_config(self._draft)
         self._update_preview()
@@ -409,7 +525,8 @@ class ThemeSettingsDialog(QDialog):
         self._preview_mascot.set_motion(self._draft["motion"])
         radius = self._draft["corner_radius"]
         self._accent_button.setStyleSheet(
-            f"background:{tokens['accent']}; color:#FFFAF0; border:0; "
+            f"background:{tokens['accent']}; color:{tokens['accent_text']}; "
+            "border:0; "
             "border-radius:10px; padding:7px 10px;"
         )
         for key, button in self._palette_buttons.items():
@@ -423,7 +540,27 @@ class ThemeSettingsDialog(QDialog):
                 "border-radius:10px; padding:9px 6px; font-weight:700; }"
             )
         self.setStyleSheet(_dialog_stylesheet(tokens, radius, self._draft["density"]))
-        self._preview_panel.setEnabled(self._draft["enabled"])
+        enabled = self._draft["enabled"]
+        session_enabled = enabled and self._draft["session_hud"]
+        self._preview_panel.setEnabled(enabled)
+        self._preview_session.setVisible(session_enabled)
+        if self._draft["focus_minutes"]:
+            self._preview_session_time.setText(
+                f"{self._draft['focus_minutes']}:00 focus"
+            )
+        else:
+            self._preview_session_time.setText("elapsed time")
+        for control in self._study_flow_children:
+            control.setEnabled(session_enabled)
+        self._lofi_town_breaks.setEnabled(
+            session_enabled and bool(self._draft["focus_minutes"])
+        )
+        self._texture.setEnabled(enabled and not self._draft["low_resource"])
+        dirty = self._draft != self._saved
+        self._footer_status.setText(
+            "Unsaved changes" if dirty else "No unsaved changes"
+        )
+        self._save_button.setEnabled(dirty)
 
 
 def _dialog_stylesheet(tokens: dict[str, str], radius: int, density: str) -> str:
@@ -480,13 +617,33 @@ QLabel#previewDeckCount {{
 }}
 QPushButton#previewStudy {{
     background: {tokens["accent"]};
-    color: #FFFAF0;
+    color: {tokens["accent_text"]};
     border: 0;
     border-bottom: 4px solid {tokens["accent_drop"]};
     border-radius: {max(10, radius - 2)}px;
     font-size: 14px;
     font-weight: 800;
     padding: 13px;
+}}
+QFrame#previewSession {{
+    background: {tokens["surface"]};
+    border: 1px solid {tokens["border"]};
+    border-radius: {max(8, radius - 5)}px;
+}}
+QLabel#previewSessionBrand {{
+    color: {tokens["accent"]};
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+}}
+QLabel#previewSessionFacts {{
+    color: {tokens["text_soft"]};
+    font-size: 11px;
+}}
+QLabel#previewSessionTime {{
+    color: {tokens["text"]};
+    font-size: 11px;
+    font-weight: 750;
 }}
 QLabel#settingDescription {{
     color: {tokens["text_soft"]};
@@ -529,6 +686,7 @@ QCheckBox::indicator:checked {{
     background: {tokens["accent"]};
     border-color: {tokens["accent"]};
 }}
+QCheckBox:disabled, QLabel:disabled {{ color: {tokens["text_muted"]}; }}
 QCheckBox#masterToggle {{
     background: {tokens["hover"]};
     border: 1px solid {tokens["border"]};
@@ -551,6 +709,10 @@ QComboBox QAbstractItemView {{
     color: {tokens["text"]};
     selection-background-color: {tokens["accent_soft"]};
 }}
+QComboBox:disabled {{
+    background: {tokens["secondary"]};
+    color: {tokens["text_muted"]};
+}}
 QSlider::groove:horizontal {{
     background: {tokens["secondary"]};
     border-radius: 3px;
@@ -570,6 +732,10 @@ QFrame#footer {{
     border-bottom-left-radius: {radius + 7}px;
     border-bottom-right-radius: {radius + 7}px;
 }}
+QLabel#footerStatus {{
+    color: {tokens["text_muted"]};
+    font-size: 11px;
+}}
 QPushButton#resetButton, QPushButton#cancelButton, QPushButton#saveButton {{
     border-radius: 999px;
     font-weight: 750;
@@ -582,8 +748,13 @@ QPushButton#resetButton, QPushButton#cancelButton {{
 }}
 QPushButton#saveButton {{
     background: {tokens["accent"]};
-    color: #FFFAF0;
+    color: {tokens["accent_text"]};
     border: 0;
     border-bottom: 4px solid {tokens["accent_drop"]};
+}}
+QPushButton#saveButton:disabled {{
+    background: {tokens["secondary"]};
+    color: {tokens["text_muted"]};
+    border: 1px solid {tokens["border"]};
 }}
 """

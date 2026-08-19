@@ -16,6 +16,7 @@ def test_builds_flat_anki_addon_without_user_data(tmp_path: Path) -> None:
     assert "__init__.py" in names
     assert "resources/animations/cozy-bunny.gif" in names
     assert "web/cozy.css" in names
+    assert "session.py" in names
     assert "resources/fonts/BricolageGrotesqueVariable.woff2" in names
     assert "resources/fonts/BricolageGrotesque.ttf" not in names
     assert not any(name.startswith("addon/") for name in names)

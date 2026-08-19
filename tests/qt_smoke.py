@@ -82,6 +82,10 @@ def main() -> None:
                 )
                 settings._palette_buttons["grape"].click()
                 assert settings._draft["palette"] == "grape"
+                settings._set_combo(settings._focus_minutes, 50)
+                settings._on_control_change()
+                assert settings._draft["focus_minutes"] == 50
+                assert not settings._preview_session.isHidden()
                 settings._save_and_close()
                 assert saved_themes[0]["palette"] == "grape"
                 settings.deleteLater()

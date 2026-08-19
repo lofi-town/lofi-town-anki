@@ -1,0 +1,67 @@
+name: Bug report
+description: Report a reproducible problem with Lofi Town for Anki.
+title: "[Bug] "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Do not include card content, account details, authorization codes, or other private data. Report security issues through the private security link instead.
+  - type: input
+    id: addon-version
+    attributes:
+      label: Add-on version
+      description: Find this on the GitHub release or downloaded package.
+      placeholder: 1.2.2
+    validations:
+      required: true
+  - type: input
+    id: anki-version
+    attributes:
+      label: Anki version
+      description: Copy the version from Anki > About.
+      placeholder: 26.08.1
+    validations:
+      required: true
+  - type: dropdown
+    id: operating-system
+    attributes:
+      label: Operating system
+      options:
+        - macOS
+        - Windows
+        - Linux
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happened?
+      description: Describe the observed behavior and what you expected.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open Anki.
+        2. Choose Tools > Lofi Town.
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Additional context
+      description: Include non-sensitive logs or screenshots if they help reproduce the problem.
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I restarted Anki and confirmed the problem still occurs.
+          required: true
+        - label: I removed private card, account, and sign-in data from this report.
+          required: true

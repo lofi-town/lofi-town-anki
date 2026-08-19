@@ -2,6 +2,7 @@
 
 Bug reports and focused pull requests are welcome. For significant behavior or
 UI changes, open an issue first so the scope can be agreed before implementation.
+Participation is governed by [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
 
 ## Development checks
 

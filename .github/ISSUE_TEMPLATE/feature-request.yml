@@ -1,0 +1,36 @@
+name: Feature request
+description: Suggest a focused improvement to the study companion.
+title: "[Feature] "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        The add-on does not modify scheduling, cards, note fields, templates, or AnkiHub content. Requests should preserve that boundary.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe the study workflow or accessibility problem, not only the proposed feature.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Explain how the feature should behave during normal Anki use.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Note any existing Anki setting or add-on that partly addresses the problem.
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Collection safety
+      options:
+        - label: This request does not require reading or changing card content, scheduling, or review history.
+          required: true

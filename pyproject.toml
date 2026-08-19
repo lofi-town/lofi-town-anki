@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "lofi-town-anki"
-version = "1.2.1"
+version = "1.2.2"
 description = "Official Lofi Town companion add-on for Anki"
 requires-python = ">=3.10"
 dependencies = []
@@ -12,7 +12,7 @@ dependencies = []
 [project.optional-dependencies]
 dev = [
   "mypy==1.17.1",
-  "pytest==8.4.1",
+  "pytest==9.0.3",
   "ruff==0.12.9"
 ]
 

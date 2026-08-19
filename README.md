@@ -2,6 +2,9 @@
 
 The official Lofi Town companion add-on keeps the live town beside your flashcards in a resizable Anki panel.
 
+[Download the latest release](https://github.com/lofi-town/lofi-town-anki/releases/latest/download/lofi-town.ankiaddon)
+or [view all releases](https://github.com/lofi-town/lofi-town-anki/releases).
+
 ## What it does
 
 - Loads the full Lofi Town app from `https://app.lofi.town`.
@@ -24,7 +27,8 @@ The add-on supports Anki 25.09.5 through 26.08.1 on macOS, Windows, and Linux.
 
 ## Install a packaged build
 
-1. Build or download `lofi-town.ankiaddon`.
+1. Download [`lofi-town.ankiaddon`](https://github.com/lofi-town/lofi-town-anki/releases/latest/download/lofi-town.ankiaddon).
+   The matching SHA-256 checksum is published beside it.
 2. In Anki, choose **Tools > Add-ons > Install from file**.
 3. Select the package and restart Anki.
 4. Use **Tools > Lofi Town** to show or hide the panel.
@@ -71,3 +75,16 @@ To run the Qt construction smoke test, install a supported `aqt[qt]` wheel in
 ## Packaging
 
 `make package` creates `dist/lofi-town.ankiaddon`. The archive is reproducible, has no wrapper directory, excludes caches, and includes only the `user_files/README.txt` placeholder from persistent storage.
+
+Pushing a version tag such as `v1.2.0` runs the complete release checks and
+publishes the package and checksum to GitHub Releases. The tag must match the
+version in `pyproject.toml`.
+
+## License
+
+The source code is licensed under the [GNU Affero General Public License,
+version 3 or later](LICENSE). Copyright 2026 Lofi Town contributors.
+
+The Bricolage Grotesque font remains under the SIL Open Font License. Lofi Town
+names, logos, and mascot artwork are not licensed under the AGPL; see
+[TRADEMARKS.md](TRADEMARKS.md).

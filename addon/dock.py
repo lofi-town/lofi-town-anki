@@ -37,11 +37,13 @@ class CozyTitleBar(QWidget):
         self,
         resources_path: Path,
         on_reload: Callable[[], None],
+        on_toggle_floating: Callable[[], None],
         on_open_external: Callable[[], None],
         on_hide: Callable[[], None],
         parent: QWidget | None = None,
     ) -> None:
         super().__init__(parent)
+        self._resources_path = resources_path
         self.setObjectName("CozyTitleBar")
         layout = QHBoxLayout(self)
         layout.setContentsMargins(12, 8, 10, 8)
@@ -73,6 +75,12 @@ class CozyTitleBar(QWidget):
                 on_reload,
             )
         )
+        self.floating_button = self._button(
+            resources_path / "icons" / "pop-out.svg",
+            "Pop Lofi Town out",
+            on_toggle_floating,
+        )
+        layout.addWidget(self.floating_button)
         layout.addWidget(
             self._button(
                 resources_path / "icons" / "external-link.svg",
@@ -88,6 +96,15 @@ class CozyTitleBar(QWidget):
                 object_name="CloseButton",
             )
         )
+
+    def set_floating(self, floating: bool) -> None:
+        icon_name = "dock.svg" if floating else "pop-out.svg"
+        tooltip = "Dock Lofi Town in Anki" if floating else "Pop Lofi Town out"
+        self.floating_button.setIcon(
+            QIcon(str(self._resources_path / "icons" / icon_name))
+        )
+        self.floating_button.setToolTip(tooltip)
+        self.floating_button.setAccessibleName(tooltip)
 
     def mouseDoubleClickEvent(self, event: QMouseEvent | None) -> None:
         dock = self.parentWidget()
@@ -162,6 +179,7 @@ class LofiTownDock(QDockWidget):
         self.title_bar = CozyTitleBar(
             self._resources_path,
             self.reload_app,
+            self.toggle_floating,
             self.open_in_browser,
             self.hide,
             self,
@@ -174,7 +192,7 @@ class LofiTownDock(QDockWidget):
         self.webview.navigationRejected.connect(self._on_navigation_rejected)
         self.webview.processFailed.connect(self._show_error)
         self.visibilityChanged.connect(lambda _visible: self._schedule_state_save())
-        self.topLevelChanged.connect(lambda _floating: self._schedule_state_save())
+        self.topLevelChanged.connect(self._on_top_level_changed)
         self.dockLocationChanged.connect(self._on_dock_location_changed)
 
         self._save_timer = QTimer(self)
@@ -201,6 +219,9 @@ class LofiTownDock(QDockWidget):
 
     def open_in_browser(self) -> None:
         self.webview.bridge.openExternal(APP_URL)
+
+    def toggle_floating(self) -> None:
+        self.setFloating(not self.isFloating())
 
     def capture_state(self) -> DockState:
         width = self.width() if not self.isFloating() else self._state["width"]
@@ -315,6 +336,10 @@ class LofiTownDock(QDockWidget):
             self._last_area = "left"
         elif area == Qt.DockWidgetArea.RightDockWidgetArea:
             self._last_area = "right"
+        self._schedule_state_save()
+
+    def _on_top_level_changed(self, floating: bool) -> None:
+        self.title_bar.set_floating(floating)
         self._schedule_state_save()
 
     def _schedule_state_save(self) -> None:

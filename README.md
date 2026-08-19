@@ -66,8 +66,8 @@ Get-FileHash .\lofi-town.ankiaddon -Algorithm SHA256
 
 - Choose **Tools > Lofi Town** to show or hide the panel.
 - Drag the panel edge to resize it or drag it between the left and right sides.
-- Double-click the Lofi Town title bar to switch between docked and floating
-  layouts.
+- Use the title-bar pop-out button to move Lofi Town into its own window or
+  dock it back into Anki.
 - Choose **Tools > Lofi Town Settings...** to adjust the theme, focus block,
   reviewer controls, motion, spacing, and low-resource mode.
 - Google and Discord sign-in open in the system browser and return to Anki.
@@ -92,8 +92,8 @@ Removing the add-on does not delete or reschedule cards.
 
 ## Features
 
-- Runs the full Lofi Town app from `https://app.lofi.town` in a docked or
-  floating panel.
+- Runs the full Lofi Town app from `https://app.lofi.town` in a resizable panel
+  with one-click docked and floating layouts.
 - Keeps sign-in, music, game state, and browser storage isolated from normal
   browsing sessions.
 - Adds customizable light and dark Anki themes with adjustable color, spacing,

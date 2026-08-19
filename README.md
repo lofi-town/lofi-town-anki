@@ -167,6 +167,20 @@ make install-dev
 `make install-dev` uses the standard Anki add-on directory for the current
 operating system. Set `ANKI_ADDONS_DIR` to override it.
 
+To test against a local Lofi Town client, launch Anki with a loopback origin:
+
+```sh
+LOFI_TOWN_ANKI_DEV_URL=http://localhost:3000 \
+  /Applications/Anki.app/Contents/MacOS/Anki
+```
+
+Start the Lofi Town checkout with its guarded `npm run dev:anki-e2e` command
+and loopback PostgreSQL and Redis URLs before launching Anki.
+
+The override accepts only plain HTTP origins on `localhost`, `127.0.0.1`, or
+`::1`. Production builds continue to use `https://app.lofi.town` when the
+variable is unset.
+
 To run the Qt construction smoke test, install a supported `aqt[qt]` wheel in
 `.venv`, then run `make qt-smoke`.
 

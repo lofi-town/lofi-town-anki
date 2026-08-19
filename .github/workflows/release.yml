@@ -41,7 +41,7 @@ jobs:
       - run: sudo apt-get update && sudo apt-get install -y libegl1
       - run: python -m pip install -e '.[dev]' "aqt[qt]==${{ matrix.aqt }}"
       - run: make typecheck RUN_PYTHON=python
-      - run: env PYTHONPATH=. QT_QPA_PLATFORM=offscreen QTWEBENGINE_DISABLE_SANDBOX=1 QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu python tests/qt_smoke.py
+      - run: make qt-smoke RUN_PYTHON=python
 
   publish:
     needs: [quality, qt-smoke]

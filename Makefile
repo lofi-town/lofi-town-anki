@@ -2,6 +2,14 @@ PYTHON ?= python3
 VENV ?= .venv
 BIN := $(VENV)/bin
 RUN_PYTHON ?= $(BIN)/python
+QT_SMOKE_ENV := QT_QPA_PLATFORM=offscreen \
+	QTWEBENGINE_DISABLE_SANDBOX=1 \
+	QTWEBENGINE_CHROMIUM_FLAGS=--disable-gpu
+
+ifeq ($(shell uname -s),Darwin)
+ANKI_APP ?= /Applications/Anki.app
+QT_SMOKE_ENV += QT_PLUGIN_PATH="$(ANKI_APP)/Contents/Resources/app_packages/PyQt6/Qt6/plugins"
+endif
 
 .PHONY: help bootstrap lint typecheck test qt-smoke package check-package install-dev clean
 
@@ -31,7 +39,7 @@ test:
 	$(RUN_PYTHON) -m pytest
 
 qt-smoke:
-	PYTHONPATH=. QTWEBENGINE_DISABLE_SANDBOX=1 $(RUN_PYTHON) tests/qt_smoke.py
+	PYTHONPATH=. $(QT_SMOKE_ENV) $(RUN_PYTHON) tests/qt_smoke.py
 
 package:
 	$(RUN_PYTHON) scripts/package_addon.py

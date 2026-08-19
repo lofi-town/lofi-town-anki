@@ -6,7 +6,15 @@ from pathlib import Path
 
 os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
 
-from aqt.qt import QApplication, QMainWindow, QMovie, QTimer, QUrl, QWebEnginePage
+from aqt.qt import (
+    QApplication,
+    QMainWindow,
+    QMovie,
+    Qt,
+    QTimer,
+    QUrl,
+    QWebEnginePage,
+)
 
 from addon.configuration import DEFAULT_CONFIG
 from addon.dock import LofiTownDock
@@ -36,6 +44,7 @@ def main() -> None:
                     lambda _state: None,
                     window,
                 )
+                window.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, dock)
                 font_family = load_cozy_font_family()
                 assert font_family
                 assert dock.font().family() == font_family
@@ -51,6 +60,16 @@ def main() -> None:
                     script.name() == "lofi-town-anki-bridge"
                     for script in dock.webview.profile.scripts().toList()
                 )
+                assert dock.title_bar.floating_button.toolTip() == (
+                    "Pop Lofi Town out"
+                )
+                dock.title_bar.floating_button.click()
+                assert dock.isFloating()
+                assert dock.title_bar.floating_button.toolTip() == (
+                    "Dock Lofi Town in Anki"
+                )
+                dock.title_bar.floating_button.click()
+                assert not dock.isFloating()
                 dock.stack.setCurrentWidget(dock.webview)
                 dock._on_load_started()
                 assert dock.stack.currentWidget() is dock.loading_view

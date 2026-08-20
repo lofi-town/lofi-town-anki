@@ -7,18 +7,18 @@
 }
 
 :root.lofi-town-theme .lofi-completion-eyebrow {
-    color: var(--lofi-accent);
-    font-size: 0.7rem;
+    color: var(--lofi-accent-ink);
+    font-size: 0.75rem;
     font-weight: 800;
     letter-spacing: 0.12em;
 }
 
 :root.lofi-town-theme #lofi-town-completion-title {
     color: var(--lofi-text);
-    font-size: clamp(1.35rem, 4vw, 1.8rem);
+    font-size: clamp(1.25rem, 4vw, 1.75rem);
     letter-spacing: -0.025em;
     line-height: 1.2;
-    margin: 10px 0 8px;
+    margin: 8px 0;
 }
 
 :root.lofi-town-theme[data-lofi-view="congrats"]
@@ -30,7 +30,7 @@
     display: flex;
     flex-wrap: wrap;
     gap: 8px;
-    margin: 14px 0 18px;
+    margin: 16px 0;
 }
 
 :root.lofi-town-theme .lofi-recap-stats span {
@@ -38,7 +38,7 @@
     border-radius: 999px;
     background: var(--lofi-surface);
     color: var(--lofi-text-soft);
-    padding: 6px 10px;
+    padding: 4px 8px;
 }
 
 :root.lofi-town-theme .lofi-recap-stats strong {
@@ -58,8 +58,13 @@
     color: var(--lofi-text-soft);
     cursor: pointer;
     font-weight: 800;
-    min-height: 42px;
-    padding: 9px 16px;
+    min-height: 40px;
+    padding: 8px 16px;
+    transition:
+        background-color var(--lofi-duration) var(--lofi-ease),
+        border-color var(--lofi-duration) var(--lofi-ease),
+        color var(--lofi-duration) var(--lofi-ease),
+        transform var(--lofi-duration) var(--lofi-ease);
 }
 
 :root.lofi-town-theme #lofi-town-completion-open {
@@ -69,8 +74,24 @@
     color: var(--lofi-accent-text);
     cursor: pointer;
     font-weight: 800;
-    min-height: 42px;
-    padding: 9px 16px;
+    min-height: 40px;
+    padding: 8px 16px;
+}
+
+:root.lofi-town-theme .lofi-recap-actions button:hover {
+    border-color: var(--lofi-accent);
+    background: var(--lofi-hover);
+    color: var(--lofi-text);
+}
+
+:root.lofi-town-theme #lofi-town-completion-open:hover {
+    background: var(--lofi-accent);
+    box-shadow: 0 2px 0 var(--lofi-accent-drop);
+    color: var(--lofi-accent-text);
+}
+
+:root.lofi-town-theme .lofi-recap-actions button:active {
+    transform: translateY(1px);
 }
 
 :root.lofi-town-theme #lofi-town-completion-open[hidden] {

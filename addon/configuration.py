@@ -208,6 +208,7 @@ def theme_tokens(config: dict[str, Any], mode: str) -> dict[str, str]:
     )
     tokens.update(
         accent=accent,
+        accent_ink=_readable_accent(accent, tokens["surface"]),
         accent_text=contrast_text(accent),
         accent_drop=(
             mix_colors(accent, "#000000", 0.28 if mode == "light" else 0.34)
@@ -238,6 +239,15 @@ def mix_colors(foreground: str, background: str, background_ratio: float) -> str
 def contrast_text(background: str) -> str:
     options = ("#24170D", "#FFFAF0")
     return max(options, key=lambda color: _contrast_ratio(background, color))
+
+
+def _readable_accent(accent: str, background: str) -> str:
+    target = contrast_text(background)
+    for step in range(21):
+        candidate = mix_colors(accent, target, step / 20)
+        if _contrast_ratio(candidate, background) >= 4.5:
+            return candidate
+    return target
 
 
 def _contrast_ratio(first: str, second: str) -> float:

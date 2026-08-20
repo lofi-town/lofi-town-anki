@@ -13,20 +13,25 @@
 
 Keep the live Lofi Town beside your flashcards in a resizable Anki panel.
 
-![The live Lofi Town panel inside Anki](https://raw.githubusercontent.com/lofi-town/lofi-town-anki/v1.3.0/docs/images/lofi-town-panel.jpeg)
+![The live Lofi Town panel inside Anki](https://raw.githubusercontent.com/lofi-town/lofi-town-anki/v1.4.0/docs/images/lofi-town-panel.jpeg)
 
 ### Included
 
 - Dock Lofi Town on either side of Anki or pop it into a floating window.
-- Use optional 15, 25, or 50 minute focus blocks with pause and restart controls.
+- Set an optional answer target with a live progress bar and an honest,
+  non-modal completion state.
+- Use custom focus and break lengths with pause, skip, and restart controls.
 - Opt in to private Lofi Town stopwatch sessions that begin after the first
   answer and earn existing focus rewards.
-- See the current session's answer count and Anki's visible remaining-card count.
+- Choose which session facts appear, use a compact layout, and place the strip
+  above or below Anki's answer buttons.
+- See an in-memory recap with answers, focused time, focus blocks, and answer
+  targets when the session ends.
 - Choose optional light and dark Anki themes, quiet review mode, rating-key hints,
   reduced motion, and low-resource mode.
 - Sign in with Google or Discord through the system browser.
 
-![Lofi Town appearance and study settings](https://raw.githubusercontent.com/lofi-town/lofi-town-anki/v1.3.0/docs/images/settings.jpeg)
+![Lofi Town appearance and study settings](https://raw.githubusercontent.com/lofi-town/lofi-town-anki/v1.4.0/docs/images/settings.jpeg)
 
 ### Collection safety
 

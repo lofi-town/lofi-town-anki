@@ -46,6 +46,8 @@ def test_review_controls_are_the_only_source_for_session_commands() -> None:
         "lofi-town:pause-focus",
         "lofi-town:resume-focus",
         "lofi-town:restart-focus",
+        "lofi-town:start-break",
+        "lofi-town:restart-target",
         "lofi-town:take-break",
     }
 

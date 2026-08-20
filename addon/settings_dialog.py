@@ -28,6 +28,7 @@ from aqt.qt import (
 from .configuration import DEFAULT_CONFIG, PALETTES, normalize_config, theme_tokens
 from .fonts import load_cozy_font_family
 from .mascot import CozyBunnyLabel
+from .study_settings import StudyCompanionSettings, StudyCompanionValues
 
 
 class ThemeSettingsDialog(QDialog):
@@ -129,14 +130,16 @@ class ThemeSettingsDialog(QDialog):
         session_layout = QHBoxLayout(self._preview_session)
         session_layout.setContentsMargins(11, 8, 11, 8)
         session_layout.setSpacing(8)
-        session_brand = QLabel("LOFI.TOWN FOCUS", self._preview_session)
-        session_brand.setObjectName("previewSessionBrand")
-        session_facts = QLabel("7 answers · 12 remaining", self._preview_session)
-        session_facts.setObjectName("previewSessionFacts")
+        self._preview_session_brand = QLabel("LOFI.TOWN FOCUS", self._preview_session)
+        self._preview_session_brand.setObjectName("previewSessionBrand")
+        self._preview_session_facts = QLabel(
+            "7 answers · 12 remaining", self._preview_session
+        )
+        self._preview_session_facts.setObjectName("previewSessionFacts")
         self._preview_session_time = QLabel("25:00 focus", self._preview_session)
         self._preview_session_time.setObjectName("previewSessionTime")
-        session_layout.addWidget(session_brand)
-        session_layout.addWidget(session_facts)
+        session_layout.addWidget(self._preview_session_brand)
+        session_layout.addWidget(self._preview_session_facts)
         session_layout.addStretch(1)
         session_layout.addWidget(self._preview_session_time)
         scene_layout.addWidget(self._preview_session)
@@ -201,56 +204,8 @@ class ThemeSettingsDialog(QDialog):
         custom_layout.addWidget(self._accent_button)
         layout.addWidget(custom_row)
 
-        layout.addWidget(self._section_label("Study flow", content))
-        session_row, self._session_hud = self._toggle_setting(
-            "Study companion",
-            "Show session facts and enable focus controls.",
-            content,
-        )
-        self._focus_minutes = QComboBox(content)
-        self._focus_minutes.addItem("Elapsed time only", 0)
-        self._focus_minutes.addItem("15 minute focus", 15)
-        self._focus_minutes.addItem("25 minute focus", 25)
-        self._focus_minutes.addItem("50 minute focus", 50)
-        focus_row = self._row_with_control(
-            "Focus block",
-            "A non-modal reminder that never stops review.",
-            self._focus_minutes,
-            content,
-        )
-        sync_row, self._sync_focus_with_lofi_town = self._toggle_setting(
-            "Sync focus time and rewards with Lofi Town",
-            "Starts a private Lofi Town stopwatch after your first answer.",
-            content,
-        )
-        quiet_row, self._review_focus_mode = self._toggle_setting(
-            "Quiet reviewer",
-            "Reduce peripheral controls until you move to them.",
-            content,
-        )
-        shortcut_row, self._show_rating_shortcuts = self._toggle_setting(
-            "Rating key hints",
-            "Show 1, 2, 3, and 4 on answer buttons.",
-            content,
-        )
-        break_row, self._lofi_town_breaks = self._toggle_setting(
-            "Lofi Town break handoff",
-            "Reveal the town after a focus block or completed deck.",
-            content,
-        )
-        self._study_flow_children = (
-            focus_row,
-            sync_row,
-            quiet_row,
-            shortcut_row,
-            break_row,
-        )
-        layout.addWidget(session_row)
-        layout.addWidget(focus_row)
-        layout.addWidget(sync_row)
-        layout.addWidget(quiet_row)
-        layout.addWidget(shortcut_row)
-        layout.addWidget(break_row)
+        self._study_settings = StudyCompanionSettings(content)
+        layout.addWidget(self._study_settings)
 
         layout.addWidget(self._section_label("Appearance", content))
         self._color_mode = QComboBox(content)
@@ -396,20 +351,6 @@ class ThemeSettingsDialog(QDialog):
         row_layout.addWidget(control)
         return row
 
-    def _toggle_setting(
-        self,
-        title: str,
-        description: str,
-        parent: QWidget,
-    ) -> tuple[QFrame, QCheckBox]:
-        row = self._setting_row(title, description, parent)
-        toggle = QCheckBox("On", row)
-        toggle.setObjectName("settingToggle")
-        toggle.setAccessibleName(title)
-        row_layout = cast(QHBoxLayout, row.layout())
-        row_layout.addWidget(toggle)
-        return row, toggle
-
     def _connect_controls(self) -> None:
         self._enabled.toggled.connect(self._on_control_change)
         for key, button in self._palette_buttons.items():
@@ -418,21 +359,12 @@ class ThemeSettingsDialog(QDialog):
             )
         self._custom_accent_enabled.toggled.connect(self._on_control_change)
         self._accent_button.clicked.connect(self._choose_accent)
-        for combo in (
-            self._focus_minutes,
-            self._color_mode,
-            self._density,
-            self._motion,
-        ):
+        self._study_settings.changed.connect(self._on_control_change)
+        for combo in (self._color_mode, self._density, self._motion):
             combo.currentIndexChanged.connect(self._on_control_change)
         for slider in (self._font_scale, self._corner_radius):
             slider.valueChanged.connect(self._on_control_change)
         for checkbox in (
-            self._session_hud,
-            self._sync_focus_with_lofi_town,
-            self._review_focus_mode,
-            self._show_rating_shortcuts,
-            self._lofi_town_breaks,
             self._texture,
             self._native_window,
             self._review_backdrop,
@@ -446,16 +378,7 @@ class ThemeSettingsDialog(QDialog):
             self._enabled.setChecked(config["enabled"])
             self._palette_buttons[config["palette"]].setChecked(True)
             self._custom_accent_enabled.setChecked(config["custom_accent_enabled"])
-            self._session_hud.setChecked(config["session_hud"])
-            self._sync_focus_with_lofi_town.setChecked(
-                config["sync_focus_with_lofi_town"]
-            )
-            self._set_combo(self._focus_minutes, config["focus_minutes"])
-            self._review_focus_mode.setChecked(config["review_focus_mode"])
-            self._show_rating_shortcuts.setChecked(
-                config["show_rating_shortcuts"]
-            )
-            self._lofi_town_breaks.setChecked(config["lofi_town_breaks"])
+            self._study_settings.load(config)
             self._set_combo(self._color_mode, config["color_mode"])
             self._set_combo(self._density, config["density"])
             self._set_combo(self._motion, config["motion"])
@@ -501,14 +424,6 @@ class ThemeSettingsDialog(QDialog):
             palette=checked_palette,
             color_mode=self._color_mode.currentData(),
             custom_accent_enabled=self._custom_accent_enabled.isChecked(),
-            session_hud=self._session_hud.isChecked(),
-            sync_focus_with_lofi_town=(
-                self._sync_focus_with_lofi_town.isChecked()
-            ),
-            focus_minutes=self._focus_minutes.currentData(),
-            review_focus_mode=self._review_focus_mode.isChecked(),
-            show_rating_shortcuts=self._show_rating_shortcuts.isChecked(),
-            lofi_town_breaks=self._lofi_town_breaks.isChecked(),
             density=self._density.currentData(),
             font_scale=self._font_scale.value() / 100,
             corner_radius=self._corner_radius.value(),
@@ -518,6 +433,7 @@ class ThemeSettingsDialog(QDialog):
             review_backdrop=self._review_backdrop.isChecked(),
             low_resource=self._low_resource.isChecked(),
         )
+        self._draft.update(self._study_settings.values().to_config())
         self._draft = normalize_config(self._draft)
         self._update_preview()
 
@@ -555,20 +471,27 @@ class ThemeSettingsDialog(QDialog):
             )
         self.setStyleSheet(_dialog_stylesheet(tokens, radius, self._draft["density"]))
         enabled = self._draft["enabled"]
-        session_enabled = enabled and self._draft["session_hud"]
+        study = StudyCompanionValues.from_config(self._draft)
+        session_enabled = enabled and study.session_hud
         self._preview_panel.setEnabled(enabled)
         self._preview_session.setVisible(session_enabled)
-        if self._draft["focus_minutes"]:
-            self._preview_session_time.setText(
-                f"{self._draft['focus_minutes']}:00 focus"
-            )
+        self._preview_session_brand.setVisible(not study.hud_compact)
+        facts = []
+        if study.hud_show_answers:
+            if study.session_target_answers:
+                facts.append(f"7/{study.session_target_answers} answers")
+            else:
+                facts.append("7 answers")
+        if study.hud_show_remaining:
+            facts.append("12 remaining")
+        self._preview_session_facts.setText(" · ".join(facts))
+        self._preview_session_facts.setVisible(bool(facts))
+        self._preview_session_time.setVisible(study.hud_show_timer)
+        if study.focus_minutes:
+            self._preview_session_time.setText(f"{study.focus_minutes}:00 focus")
         else:
             self._preview_session_time.setText("elapsed time")
-        for control in self._study_flow_children:
-            control.setEnabled(session_enabled)
-        self._lofi_town_breaks.setEnabled(
-            session_enabled and bool(self._draft["focus_minutes"])
-        )
+        self._study_settings.set_available(enabled)
         self._texture.setEnabled(enabled and not self._draft["low_resource"])
         dirty = self._draft != self._saved
         self._footer_status.setText(

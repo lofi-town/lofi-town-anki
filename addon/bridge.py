@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, cast
 
 from aqt.qt import (
     QDesktopServices,
@@ -24,6 +24,7 @@ else:
 
 from .constants import BRIDGE_API_VERSION, OAUTH_TIMEOUT_SECONDS
 from .focus_sync import (
+    FocusRequest,
     decode_focus_state,
     normalize_focus_request,
 )
@@ -42,7 +43,7 @@ class NativeBridge(QObject):
             self.oauthCallback.emit,
             timeout_seconds=OAUTH_TIMEOUT_SECONDS,
         )
-        self._focus_request: dict[str, object] | None = None
+        self._focus_request: FocusRequest | None = None
 
     @pyqtSlot(result="QString")
     def getOAuthCallbackUrl(self) -> str:
@@ -94,7 +95,7 @@ class NativeBridge(QObject):
         self.focusStateReported.emit(encoded)
         return _result(ok=True)
 
-    def set_focus_request(self, request: dict[str, object] | None) -> None:
+    def set_focus_request(self, request: FocusRequest | None) -> None:
         self._focus_request = normalize_focus_request(request)
         encoded = json.dumps(
             self._focus_request,
@@ -120,7 +121,7 @@ def install_bridge(page: QWebEnginePage, bridge: NativeBridge) -> QWebChannel:
 def _result(
     *,
     ok: bool,
-    value: Any = None,
+    value: object | None = None,
     message: str | None = None,
 ) -> str:
     payload: dict[str, object] = {"ok": ok}
@@ -167,12 +168,8 @@ def _bridge_javascript() -> str:
             for (const listener of [...oauthListeners]) listener(value);
           }});
           nativeBridge.focusRequestChanged.connect(raw => {{
-            try {{
-              const request = typeof raw === 'string' ? JSON.parse(raw) : raw;
-              for (const listener of [...focusListeners]) listener(request);
-            }} catch {{
-              // Native payloads are validated before emission.
-            }}
+            const request = typeof raw === 'string' ? JSON.parse(raw) : raw;
+            for (const listener of [...focusListeners]) listener(request);
           }});
         }}
         resolve(nativeBridge);

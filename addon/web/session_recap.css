@@ -1,0 +1,97 @@
+:root.lofi-town-theme[data-lofi-view="congrats"]
+    :is(#lofi-town-completion, #lofi-town-recap) {
+    border-top: 1px solid var(--lofi-border);
+    margin-top: 24px;
+    padding-top: 24px;
+    text-align: left;
+}
+
+:root.lofi-town-theme .lofi-completion-eyebrow {
+    color: var(--lofi-accent);
+    font-size: 0.7rem;
+    font-weight: 800;
+    letter-spacing: 0.12em;
+}
+
+:root.lofi-town-theme #lofi-town-completion-title {
+    color: var(--lofi-text);
+    font-size: clamp(1.35rem, 4vw, 1.8rem);
+    letter-spacing: -0.025em;
+    line-height: 1.2;
+    margin: 10px 0 8px;
+}
+
+:root.lofi-town-theme[data-lofi-view="congrats"]
+    :is(#lofi-town-completion, #lofi-town-recap) p {
+    margin: 0 0 18px;
+}
+
+:root.lofi-town-theme .lofi-recap-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0 18px;
+}
+
+:root.lofi-town-theme .lofi-recap-stats span {
+    border: 1px solid var(--lofi-border);
+    border-radius: 999px;
+    background: var(--lofi-surface);
+    color: var(--lofi-text-soft);
+    padding: 6px 10px;
+}
+
+:root.lofi-town-theme .lofi-recap-stats strong {
+    color: var(--lofi-text);
+}
+
+:root.lofi-town-theme .lofi-recap-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+:root.lofi-town-theme .lofi-recap-actions button {
+    border: 1px solid var(--lofi-border);
+    border-radius: 999px;
+    background: var(--lofi-card);
+    color: var(--lofi-text-soft);
+    cursor: pointer;
+    font-weight: 800;
+    min-height: 42px;
+    padding: 9px 16px;
+}
+
+:root.lofi-town-theme #lofi-town-completion-open {
+    border: 1px solid var(--lofi-accent-drop);
+    border-radius: 999px;
+    background: var(--lofi-accent);
+    color: var(--lofi-accent-text);
+    cursor: pointer;
+    font-weight: 800;
+    min-height: 42px;
+    padding: 9px 16px;
+}
+
+:root.lofi-town-theme #lofi-town-completion-open[hidden] {
+    display: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="deck-browser"] #lofi-town-recap,
+:root.lofi-town-theme[data-lofi-view="overview"] #lofi-town-recap {
+    border: 1px solid var(--lofi-border);
+    border-radius: var(--lofi-radius);
+    box-shadow: var(--lofi-soft-shadow);
+    box-sizing: border-box;
+    background: var(--lofi-card);
+    color: var(--lofi-text-soft);
+    margin: 16px auto;
+    max-width: 680px;
+    padding: 20px;
+    text-align: left;
+}
+
+:root.lofi-town-theme #lofi-town-recap .lofi-recap-detail {
+    color: var(--lofi-text-soft);
+    margin: 8px 0 0;
+}

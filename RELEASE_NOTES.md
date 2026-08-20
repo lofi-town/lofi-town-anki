@@ -1,11 +1,17 @@
 ## What changed
 
-- Added opt-in focus sync with private Lofi Town stopwatch sessions.
-- Starts local and synced focus timing after the first answered card.
-- Synchronizes pause, resume, break, and reviewer-end actions only for sessions
-  created by the add-on.
-- Keeps existing Lofi Town focus sessions read-only and never sends card, deck,
-  rating, answer-count, or remaining-card data.
+- Added optional answer targets with a live, non-modal progress bar.
+- Added custom focus lengths from 1 through 180 minutes and optional break
+  countdowns from 1 through 60 minutes.
+- Added in-memory session recaps with answers, focused time, completed focus
+  blocks, and completed answer targets.
+- Added controls to independently hide answer, remaining, timer, progress, and
+  focus-sync facts, use a compact layout, or move the reviewer strip.
+- Keeps custom focus blocks compatible with the existing Lofi Town client by
+  using an open-ended synced stopwatch while the add-on enforces the local
+  target.
+- Continues to avoid collection reads, collection writes, scheduling changes,
+  and transmission of card, deck, rating, answer-count, or remaining-card data.
 
 ## Install or update
 

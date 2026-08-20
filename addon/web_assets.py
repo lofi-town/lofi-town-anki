@@ -4,6 +4,7 @@ import json
 from typing import Any
 
 from .configuration import normalize_config, theme_tokens
+from .session import SessionSummaryPayload
 
 
 def _payload(config: dict[str, Any], view: str) -> dict[str, Any]:
@@ -79,199 +80,39 @@ def build_session_bootstrap(
     payload = {
         **session,
         "focusMinutes": normalized["focus_minutes"],
+        "breakMinutes": normalized["break_minutes"],
+        "targetAnswers": normalized["session_target_answers"],
+        "showAnswers": normalized["hud_show_answers"],
+        "showRemaining": normalized["hud_show_remaining"],
+        "showTimer": normalized["hud_show_timer"],
+        "showProgress": normalized["hud_show_progress"],
+        "showSyncStatus": normalized["hud_show_sync_status"],
+        "compact": normalized["hud_compact"],
+        "position": normalized["hud_position"],
         "showLofiTownBreak": normalized["lofi_town_breaks"],
     }
     data = json.dumps(payload, separators=(",", ":"), sort_keys=True)
     return f"""
 <script id="lofi-town-session-bootstrap">
-(() => {{
-  let state = {data};
-  let breakAnnounced = false;
-  let timer = 0;
-  let observer = null;
+window.__lofiTownSessionBootstrap = {data};
+</script>
+""".strip()
 
-  const formatDuration = (milliseconds) => {{
-    const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${{minutes}}:${{String(seconds).padStart(2, "0")}}`;
-  }};
 
-  const send = (command) => {{
-    if (typeof pycmd === "function") pycmd(command);
-  }};
-
-  const readRemaining = () => {{
-    const selectors = [".new-count", ".learn-count", ".review-count"];
-    const nodes = selectors.map((selector) => document.querySelector(selector));
-    const values = nodes.flatMap((node) => {{
-      if (!node) return [];
-      const match = node.textContent.replaceAll(",", "").match(/\\d+/);
-      return match ? [Number(match[0])] : [];
-    }});
-    return {{
-      nodes: nodes.filter(Boolean),
-      total: values.reduce((sum, value) => sum + value, 0),
-    }};
-  }};
-
-  const renderWorkload = () => {{
-    const workload = document.getElementById("lofi-session-workload");
-    if (!workload) return;
-    const remaining = readRemaining();
-    workload.textContent = remaining.nodes.length
-      ? `${{remaining.total.toLocaleString()}} remaining`
-      : "remaining hidden";
-  }};
-
-  const render = () => {{
-    const hud = document.getElementById("lofi-session-hud");
-    if (!hud) return;
-    const answerCount = document.getElementById("lofi-session-answers");
-    const time = document.getElementById("lofi-session-time");
-    const status = document.getElementById("lofi-session-status");
-    const sync = document.getElementById("lofi-session-sync");
-    const pause = document.getElementById("lofi-session-pause");
-    const restart = document.getElementById("lofi-session-restart");
-    const openTown = document.getElementById("lofi-session-open-town");
-    answerCount.textContent = `${{state.answers.toLocaleString()}} ${{
-      state.answers === 1 ? "answer" : "answers"
-    }}`;
-    renderWorkload();
-
-    sync.hidden = !state.syncEnabled;
-    sync.textContent = state.syncMessage || "Lofi Town focus sync";
-    sync.dataset.status = state.syncStatus;
-    status.textContent = state.syncMessage || "";
-
-    if (!state.startedAt) {{
-      time.textContent = "Ready";
-      pause.hidden = true;
-      restart.hidden = true;
-      openTown.hidden = true;
-      return;
-    }}
-
-    if (!state.focusMinutes) {{
-      const effectiveNow = state.focusPausedAt || Date.now();
-      const elapsed = Math.max(
-        0,
-        effectiveNow - state.focusStartedAt - state.focusPausedTotal
-      );
-      const suffix = state.focusPausedAt ? " · paused" : "";
-      time.textContent = `${{formatDuration(elapsed)}} elapsed${{suffix}}`;
-      pause.hidden = !state.syncEnabled
-        || state.syncStatus === "external"
-        || state.syncStatus === "ended";
-      pause.textContent = state.focusPausedAt ? "Resume" : "Pause";
-      pause.setAttribute("aria-pressed", state.focusPausedAt ? "true" : "false");
-      restart.hidden = true;
-      openTown.hidden = true;
-      return;
-    }}
-
-    const effectiveNow = state.focusPausedAt || Date.now();
-    const elapsed = Math.max(
-      0,
-      effectiveNow - state.focusStartedAt - state.focusPausedTotal
-    );
-    const remaining = state.focusMinutes * 60 * 1000 - elapsed;
-    const complete = remaining <= 0;
-    hud.classList.toggle("is-break-ready", complete);
-    pause.hidden = complete
-      || state.syncStatus === "external"
-      || state.syncStatus === "ended";
-    pause.textContent = state.focusPausedAt ? "Resume" : "Pause";
-    pause.setAttribute("aria-pressed", state.focusPausedAt ? "true" : "false");
-    restart.hidden = !complete;
-    openTown.hidden = !complete || !state.showLofiTownBreak;
-
-    if (complete) {{
-      time.textContent = "Break ready";
-      if (!breakAnnounced) {{
-        status.textContent = "Focus block complete.";
-        breakAnnounced = true;
-      }}
-    }} else {{
-      const suffix = state.focusPausedAt ? " · paused" : "";
-      time.textContent = `${{formatDuration(remaining)}} left${{suffix}}`;
-      status.textContent = state.syncMessage || "";
-      breakAnnounced = false;
-    }}
-  }};
-
-  const install = () => {{
-    const outer = document.getElementById("outer");
-    if (!outer || document.getElementById("lofi-session-hud")) return;
-    const hud = document.createElement("section");
-    hud.id = "lofi-session-hud";
-    hud.setAttribute("aria-label", "Review session");
-    hud.innerHTML = `
-      <div class="lofi-session-brand" aria-label="Lofi Town focus">
-        <span class="lofi-session-light" aria-hidden="true"></span>
-        <strong>lofi.town</strong><span>focus</span>
-      </div>
-      <div class="lofi-session-facts">
-        <span id="lofi-session-answers">0 answers</span>
-        <span aria-hidden="true">·</span>
-        <span id="lofi-session-workload">remaining hidden</span>
-      </div>
-      <span id="lofi-session-sync" class="lofi-session-sync" hidden></span>
-      <span id="lofi-session-time" class="lofi-session-time"></span>
-      <div class="lofi-session-actions">
-        <button id="lofi-session-pause" type="button"
-          aria-pressed="false">Pause</button>
-        <button id="lofi-session-restart" type="button" hidden>
-          Another block</button>
-        <button id="lofi-session-open-town" type="button" hidden>
-          Take a break in Lofi Town</button>
-      </div>
-      <span id="lofi-session-status" class="lofi-visually-hidden"
-        role="status" aria-live="polite"></span>`;
-    outer.parentNode.insertBefore(hud, outer);
-    document.getElementById("lofi-session-pause").addEventListener(
-      "click",
-      () => send(
-        state.focusPausedAt
-          ? "lofi-town:resume-focus"
-          : "lofi-town:pause-focus"
-      )
-    );
-    document.getElementById("lofi-session-restart").addEventListener(
-      "click",
-      () => send("lofi-town:restart-focus")
-    );
-    document.getElementById("lofi-session-open-town").addEventListener(
-      "click",
-      () => send("lofi-town:take-break")
-    );
-    const remaining = readRemaining();
-    observer = new MutationObserver(renderWorkload);
-    remaining.nodes.forEach((node) => observer.observe(node, {{
-      childList: true,
-      characterData: true,
-      subtree: true,
-    }}));
-    window.__lofiTownSession = {{
-      update(next) {{
-        state = {{ ...state, ...next }};
-        render();
-      }},
-    }};
-    render();
-    timer = window.setInterval(render, 1000);
-    window.addEventListener("pagehide", () => {{
-      window.clearInterval(timer);
-      observer?.disconnect();
-    }}, {{ once: true }});
-  }};
-
-  if (document.readyState === "loading") {{
-    document.addEventListener("DOMContentLoaded", install, {{ once: true }});
-  }} else {{
-    install();
-  }}
-}})();
+def build_recap_bootstrap(
+    config: dict[str, Any],
+    summary: SessionSummaryPayload,
+) -> str:
+    normalized = normalize_config(config)
+    payload = {
+        "summary": summary,
+        "showOpenButton": normalized["lofi_town_breaks"],
+        "showDismissButton": True,
+    }
+    data = json.dumps(payload, separators=(",", ":"), sort_keys=True)
+    return f"""
+<script id="lofi-town-recap-bootstrap">
+window.__lofiTownRecapBootstrap = {data};
 </script>
 """.strip()
 
@@ -279,23 +120,37 @@ def build_session_bootstrap(
 def build_dynamic_bootstrap(
     config: dict[str, Any],
     view: str,
-    stylesheet_url: str,
+    stylesheet_urls: tuple[str, ...],
+    recap_script_url: str,
+    summary: SessionSummaryPayload | None = None,
 ) -> str:
-    data = _payload_json(config, view)
-    href = json.dumps(stylesheet_url)
-    apply_theme = _apply_theme_script(data)
-    show_break_prompt = json.dumps(normalize_config(config)["lofi_town_breaks"])
+    normalized = normalize_config(config)
+    apply_theme = _apply_theme_script(_payload_json(normalized, view))
+    stylesheets = json.dumps(stylesheet_urls)
+    script_url = json.dumps(recap_script_url)
+    recap = json.dumps(
+        {
+            "summary": summary,
+            "showOpenButton": normalized["lofi_town_breaks"],
+            "showDismissButton": False,
+        },
+        separators=(",", ":"),
+        sort_keys=True,
+    )
+    show_recap = json.dumps(
+        normalized["lofi_town_breaks"] or summary is not None
+    )
     return f"""
 (() => {{
   const pagePath = location.pathname.endsWith("/")
     ? location.pathname.slice(0, -1)
     : location.pathname;
   if (pagePath !== "/congrats") return;
-  if (!document.getElementById("lofi-town-theme-stylesheet")) {{
+  for (const href of {stylesheets}) {{
+    if (document.querySelector(`link[href="${{href}}"]`)) continue;
     const stylesheet = document.createElement("link");
-    stylesheet.id = "lofi-town-theme-stylesheet";
     stylesheet.rel = "stylesheet";
-    stylesheet.href = {href};
+    stylesheet.href = href;
     document.head.appendChild(stylesheet);
   }}
   {apply_theme}
@@ -314,38 +169,16 @@ def build_dynamic_bootstrap(
     () => preserveThemeClass.disconnect(),
     {{ once: true }},
   );
-  if (!{show_break_prompt}) return;
-  const installCompletion = () => {{
-    if (document.getElementById("lofi-town-completion")) return;
-    const target = document.querySelector(".congrats");
-    if (!target) return;
-    const card = document.createElement("section");
-    card.id = "lofi-town-completion";
-    card.setAttribute("aria-labelledby", "lofi-town-completion-title");
-    card.innerHTML = `
-      <span class="lofi-completion-eyebrow">LOFI.TOWN STUDY ROOM</span>
-      <h2 id="lofi-town-completion-title">Take a short reset.</h2>
-      <p>Step away for a few minutes, or continue when you are ready.</p>
-      <button id="lofi-town-completion-open" type="button">
-        Open Lofi Town</button>`;
-    target.appendChild(card);
-    document.getElementById("lofi-town-completion-open").addEventListener(
-      "click",
-      () => {{
-        if (typeof pycmd === "function") pycmd("lofi-town:open");
-      }}
-    );
-  }};
-  installCompletion();
-  const preserveCompletion = new MutationObserver(installCompletion);
-  preserveCompletion.observe(document.documentElement, {{
-    childList: true,
-    subtree: true,
-  }});
-  window.addEventListener(
-    "pagehide",
-    () => preserveCompletion.disconnect(),
-    {{ once: true }},
-  );
+  if (!{show_recap}) return;
+  window.__lofiTownRecapBootstrap = {recap};
+  if (window.__lofiTownInstallRecap) {{
+    window.__lofiTownInstallRecap();
+    return;
+  }}
+  if (document.getElementById("lofi-town-recap-runtime")) return;
+  const script = document.createElement("script");
+  script.id = "lofi-town-recap-runtime";
+  script.src = {script_url};
+  document.head.appendChild(script);
 }})();
 """.strip()

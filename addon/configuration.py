@@ -5,7 +5,7 @@ from copy import deepcopy
 from typing import Any
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "config_version": 4,
+    "config_version": 5,
     "enabled": True,
     "palette": "tangerine",
     "color_mode": "light",
@@ -21,6 +21,15 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "session_hud": True,
     "sync_focus_with_lofi_town": False,
     "focus_minutes": 25,
+    "break_minutes": 5,
+    "session_target_answers": 0,
+    "hud_show_answers": True,
+    "hud_show_remaining": True,
+    "hud_show_timer": True,
+    "hud_show_progress": True,
+    "hud_show_sync_status": True,
+    "hud_compact": False,
+    "hud_position": "top",
     "review_focus_mode": False,
     "show_rating_shortcuts": True,
     "lofi_town_breaks": True,
@@ -93,6 +102,39 @@ _LEGACY_PALETTES = {
 
 _HEX_COLOR = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
+_ENUM_FIELDS = {
+    "palette": frozenset(PALETTES),
+    "color_mode": frozenset({"follow_anki", "light", "dark"}),
+    "density": frozenset({"cozy", "compact"}),
+    "motion": frozenset({"system", "full", "reduced"}),
+    "hud_position": frozenset({"top", "bottom"}),
+}
+_INTEGER_BOUNDS = {
+    "corner_radius": (8, 24),
+    "focus_minutes": (0, 180),
+    "break_minutes": (0, 60),
+    "session_target_answers": (0, 5_000),
+}
+_BOOLEAN_FIELDS = (
+    "enabled",
+    "custom_accent_enabled",
+    "texture",
+    "review_backdrop",
+    "native_window",
+    "session_hud",
+    "sync_focus_with_lofi_town",
+    "hud_show_answers",
+    "hud_show_remaining",
+    "hud_show_timer",
+    "hud_show_progress",
+    "hud_show_sync_status",
+    "hud_compact",
+    "review_focus_mode",
+    "show_rating_shortcuts",
+    "lofi_town_breaks",
+    "low_resource",
+)
+
 
 def normalize_config(raw: Any) -> dict[str, Any]:
     config = deepcopy(DEFAULT_CONFIG)
@@ -100,37 +142,28 @@ def normalize_config(raw: Any) -> dict[str, Any]:
         return config
     raw = _migrate_config(raw)
 
-    if isinstance(raw.get("enabled"), bool):
-        config["enabled"] = raw["enabled"]
-    if raw.get("palette") in PALETTES:
-        config["palette"] = raw["palette"]
-    if raw.get("color_mode") in {"follow_anki", "light", "dark"}:
-        config["color_mode"] = raw["color_mode"]
-    if isinstance(raw.get("custom_accent_enabled"), bool):
-        config["custom_accent_enabled"] = raw["custom_accent_enabled"]
+    for key, accepted in _ENUM_FIELDS.items():
+        value = raw.get(key)
+        if isinstance(value, str) and value in accepted:
+            config[key] = value
     if is_hex_color(raw.get("custom_accent")):
         config["custom_accent"] = raw["custom_accent"].upper()
-    if raw.get("density") in {"cozy", "compact"}:
-        config["density"] = raw["density"]
-    config["font_scale"] = _bounded_number(raw.get("font_scale"), 0.9, 1.2, 1.0)
-    config["corner_radius"] = round(
-        _bounded_number(raw.get("corner_radius"), 8, 24, 14)
+    config["font_scale"] = _bounded_number(
+        raw.get("font_scale"),
+        0.9,
+        1.2,
+        DEFAULT_CONFIG["font_scale"],
     )
-    if raw.get("motion") in {"system", "full", "reduced"}:
-        config["motion"] = raw["motion"]
-    if raw.get("focus_minutes") in {0, 15, 25, 50}:
-        config["focus_minutes"] = raw["focus_minutes"]
-    for key in (
-        "texture",
-        "review_backdrop",
-        "native_window",
-        "session_hud",
-        "sync_focus_with_lofi_town",
-        "review_focus_mode",
-        "show_rating_shortcuts",
-        "lofi_town_breaks",
-        "low_resource",
-    ):
+    for key, (minimum, maximum) in _INTEGER_BOUNDS.items():
+        config[key] = round(
+            _bounded_number(
+                raw.get(key),
+                minimum,
+                maximum,
+                DEFAULT_CONFIG[key],
+            )
+        )
+    for key in _BOOLEAN_FIELDS:
         if isinstance(raw.get(key), bool):
             config[key] = raw[key]
     return config
@@ -143,14 +176,14 @@ def _migrate_config(raw: dict[str, Any]) -> dict[str, Any]:
         return migrated
 
     legacy_palette = raw.get("palette")
-    if legacy_palette in _LEGACY_PALETTES:
+    if isinstance(legacy_palette, str) and legacy_palette in _LEGACY_PALETTES:
         migrated["palette"] = _LEGACY_PALETTES[legacy_palette]
 
     uses_legacy_default = (
-        legacy_palette in {None, "sunroom"}
-        and raw.get("color_mode") in {None, "follow_anki"}
-        and raw.get("custom_accent_enabled") in {None, False}
-        and raw.get("custom_accent") in {None, "#E66B2E"}
+        (legacy_palette is None or legacy_palette == "sunroom")
+        and raw.get("color_mode") in (None, "follow_anki")
+        and raw.get("custom_accent_enabled") in (None, False)
+        and raw.get("custom_accent") in (None, "#E66B2E")
     )
     if uses_legacy_default:
         migrated["color_mode"] = "light"

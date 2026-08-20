@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal, TypedDict, cast
 from uuid import UUID, uuid4
 
 FOCUS_DESIRED_STATES = frozenset({"focusing", "paused", "ended"})
@@ -34,8 +34,36 @@ _STATE_KEYS = frozenset(
     }
 )
 
+FocusDesiredState = Literal["focusing", "paused", "ended"]
+FocusStatus = Literal[
+    "signed_out",
+    "unavailable",
+    "external",
+    "starting",
+    "focusing",
+    "paused",
+    "ending",
+    "ended",
+    "error",
+]
 
-def normalize_focus_request(raw: Any) -> dict[str, object] | None:
+
+class FocusRequest(TypedDict):
+    reviewSessionId: str
+    desiredState: FocusDesiredState
+    focusMinutes: int
+
+
+class FocusState(TypedDict):
+    reviewSessionId: str
+    status: FocusStatus
+    ownedByAnki: bool
+    lofiSessionId: str | None
+    focusedMs: int
+    message: str
+
+
+def normalize_focus_request(raw: Any) -> FocusRequest | None:
     if raw is None:
         return None
     if not isinstance(raw, dict) or set(raw) != _REQUEST_KEYS:
@@ -43,18 +71,25 @@ def normalize_focus_request(raw: Any) -> dict[str, object] | None:
     review_session_id = _review_session_id(raw.get("reviewSessionId"))
     desired_state = raw.get("desiredState")
     focus_minutes = raw.get("focusMinutes")
-    if desired_state not in FOCUS_DESIRED_STATES:
+    if (
+        not isinstance(desired_state, str)
+        or desired_state not in FOCUS_DESIRED_STATES
+    ):
         raise ValueError("Invalid desired focus state.")
-    if isinstance(focus_minutes, bool) or focus_minutes not in FOCUS_MINUTES:
+    if (
+        isinstance(focus_minutes, bool)
+        or not isinstance(focus_minutes, int)
+        or focus_minutes not in FOCUS_MINUTES
+    ):
         raise ValueError("Invalid focus length.")
     return {
         "reviewSessionId": review_session_id,
-        "desiredState": desired_state,
+        "desiredState": cast(FocusDesiredState, desired_state),
         "focusMinutes": focus_minutes,
     }
 
 
-def normalize_focus_state(raw: Any) -> dict[str, object]:
+def normalize_focus_state(raw: Any) -> FocusState:
     if not isinstance(raw, dict) or set(raw) != _STATE_KEYS:
         raise ValueError("Invalid focus state fields.")
     review_session_id = _review_session_id(raw.get("reviewSessionId"))
@@ -63,7 +98,7 @@ def normalize_focus_state(raw: Any) -> dict[str, object]:
     lofi_session_id = raw.get("lofiSessionId")
     focused_ms = raw.get("focusedMs")
     message = raw.get("message")
-    if status not in FOCUS_STATUSES:
+    if not isinstance(status, str) or status not in FOCUS_STATUSES:
         raise ValueError("Invalid focus status.")
     if not isinstance(owned_by_anki, bool):
         raise ValueError("Invalid focus ownership.")
@@ -83,7 +118,7 @@ def normalize_focus_state(raw: Any) -> dict[str, object]:
         raise ValueError("Invalid focus status message.")
     return {
         "reviewSessionId": review_session_id,
-        "status": status,
+        "status": cast(FocusStatus, status),
         "ownedByAnki": owned_by_anki,
         "lofiSessionId": lofi_session_id,
         "focusedMs": focused_ms,
@@ -91,10 +126,10 @@ def normalize_focus_state(raw: Any) -> dict[str, object]:
     }
 
 
-def decode_focus_state(raw: str) -> dict[str, object]:
+def decode_focus_state(raw: str) -> FocusState:
     try:
         payload = json.loads(raw)
-    except (json.JSONDecodeError, TypeError) as error:
+    except json.JSONDecodeError as error:
         raise ValueError("Invalid focus state JSON.") from error
     return normalize_focus_state(payload)
 
@@ -111,50 +146,50 @@ def _review_session_id(value: Any) -> str:
     return value
 
 
-@dataclass
+@dataclass(slots=True)
 class FocusIntent:
     identifier_factory: Callable[[], str] = lambda: str(uuid4())
     review_session_id: str = ""
-    desired_state: str = ""
+    desired_state: FocusDesiredState = "ended"
     focus_minutes: int = 0
 
-    def start(self, focus_minutes: int) -> dict[str, object]:
+    def start(self, focus_minutes: int) -> FocusRequest:
         if focus_minutes not in FOCUS_MINUTES:
             raise ValueError("Invalid focus length.")
         if not self.review_session_id or self.desired_state == "ended":
             self.review_session_id = self.identifier_factory()
             self.focus_minutes = focus_minutes
         self.desired_state = "focusing"
-        return self.payload()
+        return self._payload()
 
-    def pause(self) -> dict[str, object] | None:
+    def pause(self) -> FocusRequest | None:
         return self._set_active_state("paused")
 
-    def resume(self) -> dict[str, object] | None:
+    def resume(self) -> FocusRequest | None:
         return self._set_active_state("focusing")
 
-    def end(self) -> dict[str, object] | None:
+    def end(self) -> FocusRequest | None:
         if not self.review_session_id or self.desired_state == "ended":
             return None
         self.desired_state = "ended"
-        return self.payload()
+        return self._payload()
 
     def reset(self) -> None:
         self.review_session_id = ""
-        self.desired_state = ""
+        self.desired_state = "ended"
         self.focus_minutes = 0
 
-    def payload(self) -> dict[str, object]:
-        return normalize_focus_request(
-            {
-                "reviewSessionId": self.review_session_id,
-                "desiredState": self.desired_state,
-                "focusMinutes": self.focus_minutes,
-            }
-        ) or {}
+    def _payload(self) -> FocusRequest:
+        return {
+            "reviewSessionId": self.review_session_id,
+            "desiredState": self.desired_state,
+            "focusMinutes": self.focus_minutes,
+        }
 
-    def _set_active_state(self, state: str) -> dict[str, object] | None:
+    def _set_active_state(
+        self, state: Literal["focusing", "paused"]
+    ) -> FocusRequest | None:
         if not self.review_session_id or self.desired_state == "ended":
             return None
         self.desired_state = state
-        return self.payload()
+        return self._payload()

@@ -11,6 +11,7 @@ os.environ.setdefault("QTWEBENGINE_DISABLE_SANDBOX", "1")
 
 from aqt.qt import (
     QApplication,
+    QEventLoop,
     QMainWindow,
     QMovie,
     Qt,
@@ -24,6 +25,150 @@ from addon.dock import LofiTownDock
 from addon.fonts import load_cozy_font_family
 from addon.settings_dialog import ThemeSettingsDialog
 from addon.state import DEFAULT_STATE
+from addon.web_assets import build_recap_bootstrap, build_session_bootstrap
+
+WEB_ROOT = Path(__file__).resolve().parents[1] / "addon" / "web"
+
+
+def run_web_script(
+    window: QMainWindow,
+    html: str,
+    url: str,
+    expression: str,
+) -> dict[str, object]:
+    page = QWebEnginePage(window)
+    result: list[dict[str, object]] = []
+    loop = QEventLoop()
+    timeout = QTimer()
+    timeout.setSingleShot(True)
+    timeout.timeout.connect(loop.quit)
+
+    def finish(value: dict[str, object]) -> None:
+        result.append(value)
+        loop.quit()
+
+    def capture(loaded: bool) -> None:
+        if not loaded:
+            result.append({"loaded": False})
+            loop.quit()
+            return
+        page.runJavaScript(expression, finish)
+
+    page.loadFinished.connect(capture)
+    page.setHtml(html, QUrl(url))
+    timeout.start(5_000)
+    loop.exec()
+    page.deleteLater()
+    assert result
+    return result[0]
+
+
+def check_session_hud(window: QMainWindow) -> None:
+    config = {
+        **DEFAULT_CONFIG,
+        "focus_minutes": 37,
+        "session_target_answers": 10,
+        "hud_show_remaining": False,
+        "hud_show_timer": False,
+        "hud_position": "bottom",
+    }
+    session = {
+        "phase": "focusing",
+        "startedAt": 1_000,
+        "focusStartedAt": 1_000,
+        "focusPausedAt": 0,
+        "focusPausedTotal": 0,
+        "completedFocusMs": 0,
+        "breakStartedAt": 0,
+        "answers": 7,
+        "targetStartedAnswers": 0,
+        "syncEnabled": False,
+        "syncStatus": "disabled",
+        "syncMessage": "",
+    }
+    script = build_session_bootstrap(config, session)
+    runtime = (WEB_ROOT / "review_session.js").read_text(encoding="utf-8")
+    html = f"""
+    <html><body>
+      <div id="outer">
+        <span class="new-count">3</span>
+        <span class="learn-count">2</span>
+        <span class="review-count">5</span>
+      </div>
+      {script}
+      <script>{runtime}</script>
+    </body></html>
+    """
+
+    result = run_web_script(
+        window,
+        html,
+        "https://anki.local/reviewer",
+        """
+        (() => ({
+          loaded: true,
+          hud: Boolean(document.getElementById("lofi-session-hud")),
+          position: document.getElementById("outer").nextElementSibling?.id,
+          answers: document.getElementById("lofi-session-answers")?.textContent,
+          remainingHidden: document.getElementById("lofi-session-workload")?.hidden,
+          timerHidden: document.getElementById("lofi-session-time")?.hidden,
+          progress: document
+            .getElementById("lofi-session-progress-fill")?.style.width,
+        }))()
+        """,
+    )
+    assert result == {
+        "loaded": True,
+        "hud": True,
+        "position": "lofi-session-hud",
+        "answers": "7/10 answers",
+        "remainingHidden": True,
+        "timerHidden": True,
+        "progress": "70%",
+    }
+
+
+def check_session_recap(window: QMainWindow) -> None:
+    bootstrap = build_recap_bootstrap(
+        DEFAULT_CONFIG,
+        {
+            "answers": 60,
+            "focusedMs": 1_500_000,
+            "blocksCompleted": 1,
+            "targetAnswers": 60,
+            "targetProgress": 60,
+            "targetsCompleted": 1,
+        },
+    )
+    runtime = (WEB_ROOT / "session_recap.js").read_text(encoding="utf-8")
+    html = f"""
+    <html><body>
+      <main class="congrats"></main>
+      {bootstrap}
+      <script>{runtime}</script>
+    </body></html>
+    """
+
+    result = run_web_script(
+        window,
+        html,
+        "https://anki.local/congrats",
+        """
+        (() => ({
+          loaded: true,
+          recap: Boolean(document.getElementById("lofi-town-recap")),
+          text: document.getElementById("lofi-town-recap")?.textContent,
+          dismiss: Boolean(document.getElementById("lofi-town-recap-dismiss")),
+          open: Boolean(document.getElementById("lofi-town-completion-open")),
+        }))()
+        """,
+    )
+    assert result["loaded"] is True
+    assert result["recap"] is True
+    assert "60 answers" in result["text"]
+    assert "25 min focused" in result["text"]
+    assert result["dismiss"] is True
+    assert result["open"] is True
 
 
 def run_smoke(addon_path: Path) -> None:
@@ -108,6 +253,8 @@ def run_smoke(addon_path: Path) -> None:
             assert not json.loads(
                 dock.webview.bridge.reportFocusState('{"answers":12}')
             )["ok"]
+            check_session_hud(window)
+            check_session_recap(window)
 
             saved_themes: list[dict[str, object]] = []
             settings = ThemeSettingsDialog(
@@ -126,10 +273,19 @@ def run_smoke(addon_path: Path) -> None:
             )
             settings._palette_buttons["grape"].click()
             assert settings._draft["palette"] == "grape"
-            settings._set_combo(settings._focus_minutes, 50)
-            settings._sync_focus_with_lofi_town.click()
+            study = settings._study_settings
+            study.focus_minutes.setValue(40)
+            study.break_minutes.setValue(8)
+            study.session_target_answers.setValue(60)
+            study._set_combo(study.hud_position, "bottom")
+            study.hud_compact.click()
+            study.sync_focus_with_lofi_town.click()
             settings._on_control_change()
-            assert settings._draft["focus_minutes"] == 50
+            assert settings._draft["focus_minutes"] == 40
+            assert settings._draft["break_minutes"] == 8
+            assert settings._draft["session_target_answers"] == 60
+            assert settings._draft["hud_position"] == "bottom"
+            assert settings._draft["hud_compact"] is True
             assert settings._draft["sync_focus_with_lofi_town"] is True
             assert not settings._preview_session.isHidden()
             settings._save_and_close()

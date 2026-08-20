@@ -13,8 +13,11 @@ The add-on stores these items locally:
 - An isolated browser profile, including Lofi Town cookies, local storage, and
   cache files, inside the add-on's `user_files/` directory.
 
-The review answer count and local focus timer are kept in memory for the current
-review session. They reset when the reviewer or Anki profile closes.
+The review answer count, answer-target progress, local focus and break timers,
+and aggregate session recap are kept in memory. The recap contains only answer
+events, focused duration, and completed target counts. It is discarded after it
+is rendered or when the Anki profile closes. This information is not written to
+the collection or sent to Lofi Town.
 
 Focus sync is disabled by default. When enabled, the first answer starts a
 private Lofi Town stopwatch. The add-on sends a random review-session identifier,

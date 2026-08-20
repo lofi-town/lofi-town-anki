@@ -48,6 +48,10 @@ def test_request_schema_rejects_review_data_and_invalid_lengths() -> None:
             normalize_focus_request({**valid, field: "private"})
     with pytest.raises(ValueError):
         normalize_focus_request({**valid, "focusMinutes": 30})
+    with pytest.raises(ValueError):
+        normalize_focus_request({**valid, "desiredState": {}})
+    with pytest.raises(ValueError):
+        normalize_focus_request({**valid, "focusMinutes": []})
 
 
 def test_focus_state_schema_is_strict_and_bounded() -> None:

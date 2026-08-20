@@ -14,14 +14,15 @@ from .compatibility import classify_context, is_trusted_lofi_command
 from .configuration import normalize_config
 from .constants import ADDON_NAME
 from .dock import LofiTownDock
-from .focus_sync import FocusIntent, decode_focus_state
+from .focus_sync import FocusRequest
 from .native_style import apply_native_style
-from .session import StudySession
+from .review_session import ReviewSessionConfig, ReviewSessionController
 from .settings_dialog import ThemeSettingsDialog
 from .state import DockState, normalize_state
 from .web_assets import (
     build_bootstrap,
     build_dynamic_bootstrap,
+    build_recap_bootstrap,
     build_session_bootstrap,
 )
 
@@ -29,14 +30,14 @@ from .web_assets import (
 class AddonController:
     def __init__(self) -> None:
         self.dock: LofiTownDock | None = None
-        self._session = StudySession()
-        self._focus_intent = FocusIntent()
-        self._focus_state: dict[str, object] = {}
+        self._review_session = ReviewSessionController(
+            self._publish_focus_request
+        )
         self._theme_config = self._read_theme_config()
         self._package = mw.addonManager.addonFromModule(__name__)
         mw.addonManager.setWebExports(
             __name__,
-            r"(web/.*\.css|resources/fonts/.*\.woff2)",
+            r"(web/.*\.(css|js)|resources/fonts/.*\.woff2)",
         )
         mw.addonManager.setConfigAction(__name__, self.open_theme_settings)
 
@@ -107,8 +108,7 @@ class AddonController:
         self.apply_native_style()
 
     def on_profile_close(self) -> None:
-        self._finish_focus_sync()
-        self._session.reset()
+        self._review_session.close(self._review_session_config())
         dock = self.dock
         if dock is None:
             return
@@ -119,8 +119,6 @@ class AddonController:
         dock.dispose()
         mw.removeDockWidget(dock)
         dock.deleteLater()
-        self._focus_intent.reset()
-        self._focus_state = {}
 
     def _toggle_dock(self, visible: bool) -> None:
         if self.dock is not None:
@@ -152,10 +150,29 @@ class AddonController:
             return
         web_content.css.append(f"/_addons/{self._package}/web/cozy.css")
         web_content.head += build_bootstrap(self._theme_config, view)
+        summary = self._review_session.peek_summary()
+        if view in {"deck-browser", "overview"} and summary:
+            web_content.css.append(
+                f"/_addons/{self._package}/web/session_recap.css"
+            )
+            web_content.head += build_recap_bootstrap(
+                self._theme_config,
+                summary.to_payload(),
+            )
+            web_content.js.append(
+                f"/_addons/{self._package}/web/session_recap.js"
+            )
+            self._review_session.take_summary()
         if view == "review-controls" and self._theme_config["session_hud"]:
+            web_content.css.append(
+                f"/_addons/{self._package}/web/review_session.css"
+            )
             web_content.head += build_session_bootstrap(
                 self._theme_config,
-                self._session_payload(),
+                self._review_session.payload(self._review_session_config()),
+            )
+            web_content.js.append(
+                f"/_addons/{self._package}/web/review_session.js"
             )
 
     def on_webview_did_inject_style_into_page(
@@ -167,11 +184,18 @@ class AddonController:
         if webview.url().path().rstrip("/") != "/congrats":
             return
         stylesheet = f"/_addons/{self._package}/web/cozy.css"
+        recap_stylesheet = (
+            f"/_addons/{self._package}/web/session_recap.css"
+        )
+        recap_script = f"/_addons/{self._package}/web/session_recap.js"
+        summary = self._review_session.take_summary()
         webview.eval(
             build_dynamic_bootstrap(
                 self._theme_config,
                 "congrats",
-                stylesheet,
+                (stylesheet, recap_stylesheet),
+                recap_script,
+                summary.to_payload() if summary else None,
             )
         )
 
@@ -181,47 +205,18 @@ class AddonController:
         _card: Any,
         _ease: int,
     ) -> None:
-        if not self._theme_config["enabled"]:
-            return
-        if not self._theme_config["session_hud"]:
-            return
-        first_answer = self._session.answers == 0
-        self._session.record_answer()
-        if first_answer and self._sync_enabled():
-            request = self._focus_intent.start(
-                self._theme_config["focus_minutes"]
-            )
-            self._focus_state = {
-                "reviewSessionId": request["reviewSessionId"],
-                "status": "starting",
-                "ownedByAnki": False,
-                "lofiSessionId": None,
-                "focusedMs": 0,
-                "message": "Connecting to Lofi Town",
-            }
-            self._publish_focus_request(request)
-        self._update_session_web(reviewer)
+        if self._review_session.record_answer(self._review_session_config()):
+            self._update_session_web(reviewer)
 
     def on_reviewer_will_end(self, *_args: Any) -> None:
-        self._finish_focus_sync()
-        self._session.reset()
+        self._review_session.finish(self._review_session_config())
 
     def on_focus_state_reported(self, raw: str) -> None:
-        try:
-            state = decode_focus_state(raw)
-        except ValueError:
-            return
-        if state["reviewSessionId"] != self._focus_intent.review_session_id:
-            return
-        self._focus_state = state
-        if state["ownedByAnki"] and state["status"] == "paused":
-            self._session.pause_focus()
-        elif state["ownedByAnki"] and state["status"] == "focusing":
-            self._session.resume_focus()
-        elif state["status"] == "ended":
-            self._session.pause_focus()
-            self._focus_intent.end()
-        self._update_session_web(mw.reviewer)
+        if self._review_session.report_focus_state(
+            raw,
+            self._review_session_config(),
+        ):
+            self._update_session_web(mw.reviewer)
 
     def on_js_message(
         self,
@@ -231,12 +226,9 @@ class AddonController:
     ) -> tuple[bool, Any]:
         if handled[0] or not message.startswith("lofi-town:"):
             return handled
-        main_web = getattr(mw, "web", None)
-        main_url = main_web.url() if main_web is not None else None
         completion_view = (
-            main_url is not None
-            and getattr(context, "web", None) is main_web
-            and main_url.path().rstrip("/") == "/congrats"
+            getattr(context, "web", None) is mw.web
+            and mw.web.url().path().rstrip("/") == "/congrats"
         )
         if not is_trusted_lofi_command(
             message,
@@ -247,26 +239,14 @@ class AddonController:
         if message == "lofi-town:open":
             self.show_lofi_town()
             return (True, None)
-        if not self._theme_config["enabled"]:
+        outcome = self._review_session.handle_command(
+            message,
+            self._review_session_config(),
+        )
+        if outcome is None:
             return handled
-        if not self._theme_config["session_hud"]:
-            return handled
-        if message == "lofi-town:pause-focus":
-            self._pause_focus()
-        elif message == "lofi-town:resume-focus":
-            self._resume_focus()
-        elif message == "lofi-town:restart-focus":
-            self._session.restart_focus_block()
-            if (
-                self._sync_enabled()
-                and self._focus_intent.desired_state == "paused"
-            ):
-                self._publish_focus_request(self._focus_intent.resume())
-        elif message == "lofi-town:take-break":
-            self._pause_focus()
+        if outcome.show_town:
             self.show_lofi_town()
-        else:
-            return handled
         self._update_session_web(context)
         return (True, None)
 
@@ -285,66 +265,22 @@ class AddonController:
             web = getattr(getattr(reviewer, "bottom", None), "web", None)
         if web is None:
             return
-        payload = json.dumps(self._session_payload(), separators=(",", ":"))
-        web.eval(f"window.__lofiTownSession?.update({payload});")
-
-    def _session_payload(self) -> dict[str, object]:
-        payload: dict[str, object] = dict(self._session.payload())
-        sync_enabled = self._sync_enabled()
-        if not sync_enabled:
-            sync_status = "disabled"
-            sync_message = ""
-        elif not self._session.started_at_ms:
-            sync_status = "ready"
-            sync_message = "Starts after your first answer"
-        else:
-            sync_status = str(self._focus_state.get("status", "starting"))
-            sync_message = str(self._focus_state.get("message", ""))
-        payload.update(
-            syncEnabled=sync_enabled,
-            syncStatus=sync_status,
-            syncMessage=sync_message,
+        payload = json.dumps(
+            self._review_session.payload(self._review_session_config()),
+            separators=(",", ":"),
         )
-        return payload
-
-    def _pause_focus(self) -> None:
-        if self._focus_state.get("status") == "external":
-            return
-        self._session.pause_focus()
-        if self._sync_enabled():
-            self._publish_focus_request(self._focus_intent.pause())
-
-    def _resume_focus(self) -> None:
-        if self._focus_state.get("status") == "external":
-            return
-        self._session.resume_focus()
-        if self._sync_enabled():
-            self._publish_focus_request(self._focus_intent.resume())
-
-    def _finish_focus_sync(self) -> None:
-        if not self._sync_enabled():
-            return
-        request = self._focus_intent.end()
-        if request is None:
-            return
-        self._focus_state["status"] = "ending"
-        self._focus_state["message"] = "Saving focus time"
-        self._publish_focus_request(request)
+        web.eval(f"window.__lofiTownSession?.update({payload});")
 
     def _publish_focus_request(
         self,
-        request: dict[str, object] | None,
+        request: FocusRequest | None,
     ) -> None:
         if request is None or self.dock is None:
             return
         self.dock.webview.bridge.set_focus_request(request)
 
-    def _sync_enabled(self) -> bool:
-        return bool(
-            self._theme_config["enabled"]
-            and self._theme_config["session_hud"]
-            and self._theme_config["sync_focus_with_lofi_town"]
-        )
+    def _review_session_config(self) -> ReviewSessionConfig:
+        return ReviewSessionConfig.from_config(self._theme_config)
 
     def apply_native_style(self, *_args: Any) -> None:
         apply_native_style(mw, self._theme_config, theme_manager.night_mode)
@@ -354,13 +290,12 @@ class AddonController:
         return normalize_config(current.get("theme"))
 
     def _write_theme_config(self, config: dict[str, Any]) -> None:
-        was_sync_enabled = self._sync_enabled()
+        previous = self._review_session_config()
         self._theme_config = normalize_config(config)
-        if was_sync_enabled and not self._sync_enabled():
-            request = self._focus_intent.end()
-            self._publish_focus_request(request)
-        if not self._theme_config["session_hud"]:
-            self._session.reset()
+        self._review_session.apply_config_change(
+            previous,
+            self._review_session_config(),
+        )
         current: dict[str, Any] = mw.addonManager.getConfig(__name__) or {}
         current["theme"] = self._theme_config
         mw.addonManager.writeConfig(__name__, current)

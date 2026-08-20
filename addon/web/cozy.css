@@ -388,7 +388,7 @@
 }
 
 :root.lofi-town-theme[data-lofi-view="congrats"] .congrats a {
-    color: var(--lofi-accent);
+    color: var(--lofi-accent-ink);
     font-weight: 800;
 }
 

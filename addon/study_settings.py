@@ -91,7 +91,6 @@ class StudyCompanionSettings(QWidget):
         self.focus_minutes.setRange(0, 180)
         self.focus_minutes.setSpecialValueText("Elapsed time only")
         self.focus_minutes.setSuffix(" min")
-        self.focus_minutes.setMinimumWidth(160)
         focus_row = self._row_with_control(
             "Focus block",
             "A non-modal reminder that never stops review.",
@@ -101,7 +100,6 @@ class StudyCompanionSettings(QWidget):
         self.break_minutes.setRange(0, 60)
         self.break_minutes.setSpecialValueText("No break timer")
         self.break_minutes.setSuffix(" min")
-        self.break_minutes.setMinimumWidth(160)
         break_row = self._row_with_control(
             "Break timer",
             "Optional countdown after a completed focus block.",
@@ -111,7 +109,6 @@ class StudyCompanionSettings(QWidget):
         self.session_target_answers.setRange(0, 5_000)
         self.session_target_answers.setSpecialValueText("Until deck is clear")
         self.session_target_answers.setSuffix(" answers")
-        self.session_target_answers.setMinimumWidth(170)
         target_row = self._row_with_control(
             "Answer target",
             "A local session goal that never changes scheduling.",
@@ -269,7 +266,7 @@ class StudyCompanionSettings(QWidget):
         row = QFrame(self)
         row.setObjectName("settingRow")
         row_layout = QHBoxLayout(row)
-        row_layout.setContentsMargins(13, 11, 13, 11)
+        row_layout.setContentsMargins(12, 12, 12, 12)
         row_layout.setSpacing(12)
         copy = QWidget(row)
         copy.setObjectName("settingCopy")
@@ -293,7 +290,7 @@ class StudyCompanionSettings(QWidget):
         control: QWidget,
     ) -> QFrame:
         row = self._setting_row(title, description)
-        control.setMinimumWidth(128)
+        control.setMinimumWidth(160)
         cast(QHBoxLayout, row.layout()).addWidget(control)
         return row
 

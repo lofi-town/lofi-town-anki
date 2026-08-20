@@ -95,8 +95,10 @@ class ThemeSettingsDialog(QDialog):
         window_header = QHBoxLayout()
         room = QLabel("Decks", scene)
         room.setObjectName("sceneTitle")
+        room.setFixedHeight(40)
         count = QLabel("12 due", scene)
         count.setObjectName("sceneBadge")
+        count.setFixedHeight(40)
         window_header.addWidget(room)
         window_header.addStretch(1)
         window_header.addWidget(count)
@@ -109,6 +111,7 @@ class ThemeSettingsDialog(QDialog):
         ):
             row = QFrame(scene)
             row.setObjectName("previewDeck")
+            row.setFixedHeight(64)
             row_layout = QHBoxLayout(row)
             row_layout.setContentsMargins(13, 10, 13, 10)
             name_label = QLabel(name, row)
@@ -120,13 +123,16 @@ class ThemeSettingsDialog(QDialog):
             row_layout.addWidget(count_label)
             scene_layout.addWidget(row)
 
+        scene_layout.addStretch(1)
         study = QPushButton("Start review", scene)
         study.setObjectName("previewStudy")
+        study.setFixedHeight(48)
         study.setEnabled(False)
         scene_layout.addWidget(study)
 
         self._preview_session = QFrame(scene)
         self._preview_session.setObjectName("previewSession")
+        self._preview_session.setFixedHeight(48)
         session_layout = QHBoxLayout(self._preview_session)
         session_layout.setContentsMargins(11, 8, 11, 8)
         session_layout.setSpacing(8)
@@ -321,7 +327,7 @@ class ThemeSettingsDialog(QDialog):
         row = QFrame(parent)
         row.setObjectName("settingRow")
         row_layout = QHBoxLayout(row)
-        row_layout.setContentsMargins(13, 11, 13, 11)
+        row_layout.setContentsMargins(12, 12, 12, 12)
         row_layout.setSpacing(12)
         copy = QWidget(row)
         copy.setObjectName("settingCopy")
@@ -346,7 +352,7 @@ class ThemeSettingsDialog(QDialog):
         parent: QWidget,
     ) -> QFrame:
         row = self._setting_row(title, description, parent)
-        control.setMinimumWidth(128)
+        control.setMinimumWidth(160)
         row_layout = cast(QHBoxLayout, row.layout())
         row_layout.addWidget(control)
         return row
@@ -469,7 +475,7 @@ class ThemeSettingsDialog(QDialog):
                 f"border:{border_width} solid {accent}; "
                 "border-radius:10px; padding:9px 6px; font-weight:700; }"
             )
-        self.setStyleSheet(_dialog_stylesheet(tokens, radius, self._draft["density"]))
+        self.setStyleSheet(_dialog_stylesheet(tokens, radius))
         enabled = self._draft["enabled"]
         study = StudyCompanionValues.from_config(self._draft)
         session_enabled = enabled and study.session_hud
@@ -500,8 +506,7 @@ class ThemeSettingsDialog(QDialog):
         self._save_button.setEnabled(dirty)
 
 
-def _dialog_stylesheet(tokens: dict[str, str], radius: int, density: str) -> str:
-    row_padding = 7 if density == "compact" else 11
+def _dialog_stylesheet(tokens: dict[str, str], radius: int) -> str:
     return f"""
 QDialog#lofiTownSettings {{
     background: {tokens["bg"]};
@@ -516,7 +521,7 @@ QFrame#previewPanel {{
     background: {tokens["raised"]};
 }}
 QLabel#previewEyebrow, QLabel#sectionLabel {{
-    color: {tokens["accent"]};
+    color: {tokens["accent_ink"]};
     font-size: 11px;
     font-weight: 800;
     letter-spacing: 1.5px;
@@ -533,7 +538,7 @@ QLabel#sceneTitle {{
 }}
 QLabel#sceneBadge {{
     background: {tokens["accent_soft"]};
-    color: {tokens["accent"]};
+    color: {tokens["accent_ink"]};
     border-radius: 9px;
     font-size: 11px;
     font-weight: 800;
@@ -547,7 +552,7 @@ QFrame#previewDeck {{
 QLabel#previewDeckName {{ color: {tokens["text"]}; font-weight: 750; }}
 QLabel#previewDeckCount {{
     background: {tokens["accent_soft"]};
-    color: {tokens["accent"]};
+    color: {tokens["accent_ink"]};
     border-radius: 9px;
     font-weight: 800;
     padding: 3px 7px;
@@ -568,7 +573,7 @@ QFrame#previewSession {{
     border-radius: {max(8, radius - 5)}px;
 }}
 QLabel#previewSessionBrand {{
-    color: {tokens["accent"]};
+    color: {tokens["accent_ink"]};
     font-size: 10px;
     font-weight: 800;
     letter-spacing: 0.8px;
@@ -592,7 +597,7 @@ QLabel#title {{
 }}
 QLabel#compatibilityBadge {{
     background: {tokens["accent_soft"]};
-    color: {tokens["accent"]};
+    color: {tokens["accent_ink"]};
     border-radius: 11px;
     font-size: 12px;
     font-weight: 750;
@@ -608,7 +613,6 @@ QFrame#settingRow {{
     border-radius: {max(10, radius - 3)}px;
 }}
 QWidget#settingCopy {{ background: transparent; }}
-QFrame#settingRow {{ padding-top: {row_padding}px; padding-bottom: {row_padding}px; }}
 QLabel#settingTitle {{ color: {tokens["text"]}; font-weight: 750; }}
 QLabel#settingDescription {{ font-size: 11px; }}
 QCheckBox {{ color: {tokens["text"]}; font-weight: 650; spacing: 8px; }}
@@ -621,6 +625,9 @@ QCheckBox::indicator {{
 }}
 QCheckBox::indicator:checked {{
     background: {tokens["accent"]};
+    border-color: {tokens["accent"]};
+}}
+QCheckBox::indicator:hover, QCheckBox::indicator:focus {{
     border-color: {tokens["accent"]};
 }}
 QCheckBox:disabled, QLabel:disabled {{ color: {tokens["text_muted"]}; }}
@@ -650,6 +657,7 @@ QComboBox:disabled {{
     background: {tokens["secondary"]};
     color: {tokens["text_muted"]};
 }}
+QComboBox:hover, QComboBox:focus {{ border-color: {tokens["accent"]}; }}
 QSlider::groove:horizontal {{
     background: {tokens["secondary"]};
     border-radius: 3px;

@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from addon.configuration import (
     DEFAULT_CONFIG,
+    PALETTES,
+    _contrast_ratio,
     contrast_text,
     is_hex_color,
     mix_colors,
@@ -82,6 +84,13 @@ def test_game_accents_share_the_warm_neutral_base() -> None:
     assert tangerine["text"] == grape["text"] == "#4A2E12"
     assert tangerine["accent"] == "#F2762E"
     assert tangerine["accent_drop"] == "#C4551A"
+
+
+def test_accent_text_meets_normal_text_contrast() -> None:
+    for palette in PALETTES:
+        for mode in ("light", "dark"):
+            tokens = theme_tokens({"palette": palette}, mode)
+            assert _contrast_ratio(tokens["accent_ink"], tokens["surface"]) >= 4.5
 
 
 def test_color_helpers_validate_and_mix() -> None:

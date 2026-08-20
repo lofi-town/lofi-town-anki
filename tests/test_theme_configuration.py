@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from addon.configuration import (
     DEFAULT_CONFIG,
+    PALETTES,
+    _contrast_ratio,
     contrast_text,
     is_hex_color,
     mix_colors,
@@ -14,11 +16,13 @@ def test_invalid_values_fall_back_and_numbers_are_bounded() -> None:
     config = normalize_config(
         {
             "enabled": "yes",
-            "palette": "unknown",
+            "palette": {},
             "font_scale": 4,
             "corner_radius": -3,
             "custom_accent": "red",
-            "focus_minutes": 30,
+            "focus_minutes": 999,
+            "break_minutes": -5,
+            "session_target_answers": 9_999,
         }
     )
 
@@ -27,7 +31,9 @@ def test_invalid_values_fall_back_and_numbers_are_bounded() -> None:
     assert config["font_scale"] == 1.2
     assert config["corner_radius"] == 8
     assert config["custom_accent"] == DEFAULT_CONFIG["custom_accent"]
-    assert config["focus_minutes"] == DEFAULT_CONFIG["focus_minutes"]
+    assert config["focus_minutes"] == 180
+    assert config["break_minutes"] == 0
+    assert config["session_target_answers"] == 5_000
 
 
 def test_valid_custom_accent_is_normalized_and_used() -> None:
@@ -61,7 +67,7 @@ def test_legacy_default_migrates_to_game_palette_in_light_mode() -> None:
         }
     )
 
-    assert config["config_version"] == 3
+    assert config["config_version"] == 4
     assert config["palette"] == "tangerine"
     assert config["color_mode"] == "light"
     assert config["custom_accent"] == "#F2762E"
@@ -80,6 +86,13 @@ def test_game_accents_share_the_warm_neutral_base() -> None:
     assert tangerine["accent_drop"] == "#C4551A"
 
 
+def test_accent_text_meets_normal_text_contrast() -> None:
+    for palette in PALETTES:
+        for mode in ("light", "dark"):
+            tokens = theme_tokens({"palette": palette}, mode)
+            assert _contrast_ratio(tokens["accent_ink"], tokens["surface"]) >= 4.5
+
+
 def test_color_helpers_validate_and_mix() -> None:
     assert is_hex_color("#A1b2C3")
     assert not is_hex_color("#FFF")
@@ -94,6 +107,14 @@ def test_study_flow_settings_are_normalized() -> None:
         {
             "session_hud": False,
             "focus_minutes": 50,
+            "break_minutes": 10,
+            "session_target_answers": 75,
+            "hud_show_answers": False,
+            "hud_show_remaining": False,
+            "hud_show_timer": False,
+            "hud_show_progress": False,
+            "hud_compact": True,
+            "hud_position": "bottom",
             "review_focus_mode": True,
             "show_rating_shortcuts": False,
             "lofi_town_breaks": False,
@@ -103,7 +124,32 @@ def test_study_flow_settings_are_normalized() -> None:
 
     assert config["session_hud"] is False
     assert config["focus_minutes"] == 50
+    assert config["break_minutes"] == 10
+    assert config["session_target_answers"] == 75
+    assert config["hud_show_answers"] is False
+    assert config["hud_show_remaining"] is False
+    assert config["hud_show_timer"] is False
+    assert config["hud_show_progress"] is False
+    assert config["hud_compact"] is True
+    assert config["hud_position"] == "bottom"
     assert config["review_focus_mode"] is True
     assert config["show_rating_shortcuts"] is False
     assert config["lofi_town_breaks"] is False
     assert config["low_resource"] is True
+
+
+def test_v3_config_gets_local_session_defaults() -> None:
+    config = normalize_config(
+        {
+            "config_version": 3,
+            "focus_minutes": 50,
+            "session_hud": True,
+        }
+    )
+
+    assert config["config_version"] == 4
+    assert config["focus_minutes"] == 50
+    assert config["break_minutes"] == 5
+    assert config["session_target_answers"] == 0
+    assert config["hud_show_progress"] is True
+    assert config["hud_position"] == "top"

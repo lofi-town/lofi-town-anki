@@ -15,12 +15,13 @@ from .configuration import normalize_config
 from .constants import ADDON_NAME
 from .dock import LofiTownDock
 from .native_style import apply_native_style
-from .session import StudySession
+from .review_session import ReviewSessionConfig, ReviewSessionController
 from .settings_dialog import ThemeSettingsDialog
 from .state import DockState, normalize_state
 from .web_assets import (
     build_bootstrap,
     build_dynamic_bootstrap,
+    build_recap_bootstrap,
     build_session_bootstrap,
 )
 
@@ -28,12 +29,12 @@ from .web_assets import (
 class AddonController:
     def __init__(self) -> None:
         self.dock: LofiTownDock | None = None
-        self._session = StudySession()
+        self._review_session = ReviewSessionController()
         self._theme_config = self._read_theme_config()
         self._package = mw.addonManager.addonFromModule(__name__)
         mw.addonManager.setWebExports(
             __name__,
-            r"(web/.*\.css|resources/fonts/.*\.woff2)",
+            r"(web/.*\.(css|js)|resources/fonts/.*\.woff2)",
         )
         mw.addonManager.setConfigAction(__name__, self.open_theme_settings)
 
@@ -101,7 +102,7 @@ class AddonController:
         self.apply_native_style()
 
     def on_profile_close(self) -> None:
-        self._session.reset()
+        self._review_session.close()
         dock = self.dock
         if dock is None:
             return
@@ -143,10 +144,29 @@ class AddonController:
             return
         web_content.css.append(f"/_addons/{self._package}/web/cozy.css")
         web_content.head += build_bootstrap(self._theme_config, view)
+        summary = self._review_session.peek_summary()
+        if view in {"deck-browser", "overview"} and summary:
+            web_content.css.append(
+                f"/_addons/{self._package}/web/session_recap.css"
+            )
+            web_content.head += build_recap_bootstrap(
+                self._theme_config,
+                summary.to_payload(),
+            )
+            web_content.js.append(
+                f"/_addons/{self._package}/web/session_recap.js"
+            )
+            self._review_session.take_summary()
         if view == "review-controls" and self._theme_config["session_hud"]:
+            web_content.css.append(
+                f"/_addons/{self._package}/web/review_session.css"
+            )
             web_content.head += build_session_bootstrap(
                 self._theme_config,
-                self._session.payload(),
+                self._review_session.payload(),
+            )
+            web_content.js.append(
+                f"/_addons/{self._package}/web/review_session.js"
             )
 
     def on_webview_did_inject_style_into_page(
@@ -158,11 +178,18 @@ class AddonController:
         if webview.url().path().rstrip("/") != "/congrats":
             return
         stylesheet = f"/_addons/{self._package}/web/cozy.css"
+        recap_stylesheet = (
+            f"/_addons/{self._package}/web/session_recap.css"
+        )
+        recap_script = f"/_addons/{self._package}/web/session_recap.js"
+        summary = self._review_session.take_summary()
         webview.eval(
             build_dynamic_bootstrap(
                 self._theme_config,
                 "congrats",
-                stylesheet,
+                (stylesheet, recap_stylesheet),
+                recap_script,
+                summary.to_payload() if summary else None,
             )
         )
 
@@ -172,15 +199,11 @@ class AddonController:
         _card: Any,
         _ease: int,
     ) -> None:
-        if not self._theme_config["enabled"]:
-            return
-        if not self._theme_config["session_hud"]:
-            return
-        self._session.record_answer()
-        self._update_session_web(reviewer)
+        if self._review_session.record_answer(self._review_session_config()):
+            self._update_session_web(reviewer)
 
     def on_reviewer_will_end(self, *_args: Any) -> None:
-        self._session.reset()
+        self._review_session.finish(self._review_session_config())
 
     def on_js_message(
         self,
@@ -203,18 +226,14 @@ class AddonController:
         if message == "lofi-town:open":
             self.show_lofi_town()
             return (True, None)
-        if not self._theme_config["enabled"]:
+        outcome = self._review_session.handle_command(
+            message,
+            self._review_session_config(),
+        )
+        if outcome is None:
             return handled
-        if not self._theme_config["session_hud"]:
-            return handled
-        if message == "lofi-town:pause-focus":
-            self._session.pause_focus()
-        elif message == "lofi-town:resume-focus":
-            self._session.resume_focus()
-        elif message == "lofi-town:restart-focus":
-            self._session.restart_focus_block()
-        else:
-            return handled
+        if outcome.show_town:
+            self.show_lofi_town()
         self._update_session_web(context)
         return (True, None)
 
@@ -233,8 +252,14 @@ class AddonController:
             web = getattr(getattr(reviewer, "bottom", None), "web", None)
         if web is None:
             return
-        payload = json.dumps(self._session.payload(), separators=(",", ":"))
+        payload = json.dumps(
+            self._review_session.payload(),
+            separators=(",", ":"),
+        )
         web.eval(f"window.__lofiTownSession?.update({payload});")
+
+    def _review_session_config(self) -> ReviewSessionConfig:
+        return ReviewSessionConfig.from_config(self._theme_config)
 
     def apply_native_style(self, *_args: Any) -> None:
         apply_native_style(mw, self._theme_config, theme_manager.night_mode)
@@ -245,8 +270,7 @@ class AddonController:
 
     def _write_theme_config(self, config: dict[str, Any]) -> None:
         self._theme_config = normalize_config(config)
-        if not self._theme_config["session_hud"]:
-            self._session.reset()
+        self._review_session.apply_config_change(self._review_session_config())
         current: dict[str, Any] = mw.addonManager.getConfig(__name__) or {}
         current["theme"] = self._theme_config
         mw.addonManager.writeConfig(__name__, current)

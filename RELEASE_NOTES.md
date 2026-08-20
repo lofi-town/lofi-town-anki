@@ -1,9 +1,14 @@
 ## What changed
 
-- Restricted Lofi Town review controls to the Anki views that created them.
-- Added a clear privacy boundary between the add-on and the Lofi Town service.
-- Added Windows package and interface smoke coverage.
-- Added public contribution templates and automated security scanning.
+- Added optional answer targets with a live, non-modal progress bar.
+- Added custom focus lengths from 1 through 180 minutes and optional break
+  countdowns from 1 through 60 minutes.
+- Added in-memory session recaps with answers, focused time, completed focus
+  blocks, and completed answer targets.
+- Added controls to independently hide answer, remaining, timer, and progress
+  facts, use a compact layout, or move the reviewer strip.
+- Continues to avoid collection reads, collection writes, scheduling changes,
+  and transmission of card, deck, rating, answer-count, or remaining-card data.
 
 ## Install or update
 

@@ -22,6 +22,10 @@ REQUIRED_FILES = {
     "resources/fonts/BricolageGrotesqueVariable.woff2",
     "resources/licenses/OFL.txt",
     "web/cozy.css",
+    "web/review_session.css",
+    "web/review_session.js",
+    "web/session_recap.css",
+    "web/session_recap.js",
     "user_files/README.txt",
 }
 ROOT_PACKAGE_FILES = {

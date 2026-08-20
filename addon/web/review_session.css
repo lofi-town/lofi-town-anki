@@ -1,0 +1,211 @@
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud {
+    align-items: center;
+    border: 1px solid var(--lofi-border);
+    border-radius: max(9px, calc(var(--lofi-radius) - 5px));
+    box-sizing: border-box;
+    display: flex;
+    gap: 10px;
+    margin: 6px auto 0;
+    min-height: 38px;
+    padding: 5px 7px 5px 10px;
+    width: min(calc(100% - 20px), 920px);
+    background: var(--lofi-surface);
+    color: var(--lofi-text-soft);
+    font-size: 0.78rem;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-brand {
+    align-items: center;
+    display: flex;
+    flex: 0 0 auto;
+    gap: 5px;
+    letter-spacing: 0.03em;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-brand strong {
+    color: var(--lofi-text);
+    font-size: 0.8rem;
+    font-weight: 800;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-brand > span:last-child {
+    color: var(--lofi-text-muted);
+    font-size: 0.7rem;
+    font-weight: 700;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-light {
+    border: 2px solid var(--lofi-card);
+    border-radius: 999px;
+    box-shadow: 0 0 0 1px var(--lofi-border);
+    background: var(--lofi-accent);
+    height: 8px;
+    width: 8px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-facts {
+    display: flex;
+    flex: 1 1 auto;
+    gap: 6px;
+    min-width: 0;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-facts[hidden],
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-time[hidden] {
+    display: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-progress {
+    border-radius: 999px;
+    background: var(--lofi-raised);
+    flex: 1 1 110px;
+    height: 6px;
+    max-width: 180px;
+    min-width: 52px;
+    overflow: hidden;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-progress[hidden] {
+    display: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-progress-fill {
+    border-radius: inherit;
+    background: var(--lofi-accent);
+    display: block;
+    height: 100%;
+    transition: width var(--lofi-duration) var(--lofi-ease);
+    width: 0;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-time {
+    color: var(--lofi-text);
+    flex: 0 0 auto;
+    font-variant-numeric: tabular-nums;
+    font-weight: 800;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions {
+    display: flex;
+    flex: 0 0 auto;
+    gap: 5px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions button {
+    border: 1px solid var(--lofi-border);
+    border-radius: 999px;
+    background: var(--lofi-card);
+    color: var(--lofi-text-soft);
+    cursor: pointer;
+    font-size: 0.72rem;
+    font-weight: 750;
+    margin: 0;
+    min-height: 30px;
+    padding: 5px 10px;
+    transition:
+        background-color var(--lofi-duration) var(--lofi-ease),
+        border-color var(--lofi-duration) var(--lofi-ease),
+        color var(--lofi-duration) var(--lofi-ease);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions button:hover {
+    border-color: var(--lofi-accent);
+    background: var(--lofi-accent-soft);
+    color: var(--lofi-text);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions button[hidden] {
+    display: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-open-town {
+    border-color: var(--lofi-accent);
+    background: var(--lofi-accent);
+    color: var(--lofi-accent-text);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud.is-break-ready {
+    border-color: var(--lofi-accent);
+    background: var(--lofi-accent-soft);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud.is-target-ready {
+    border-color: var(--lofi-positive);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud.is-compact {
+    gap: 6px;
+    min-height: 32px;
+    padding-block: 3px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"]
+    #lofi-session-hud.is-compact .lofi-session-brand {
+    display: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"][data-lofi-focus-mode="on"] #outer .stat {
+    opacity: 0.28;
+    transition: opacity var(--lofi-duration) var(--lofi-ease);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"][data-lofi-focus-mode="on"] #outer:hover .stat,
+:root.lofi-town-theme[data-lofi-view="review-controls"][data-lofi-focus-mode="on"] #outer:focus-within .stat {
+    opacity: 1;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"][data-lofi-rating-shortcuts="on"] button[data-ease] {
+    position: relative;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"][data-lofi-rating-shortcuts="on"] button[data-ease]::before {
+    border: 1px solid currentColor;
+    border-radius: 999px;
+    content: attr(data-ease);
+    font-size: 0.58rem;
+    font-weight: 800;
+    line-height: 1;
+    opacity: 0.72;
+    padding: 2px 4px;
+    position: absolute;
+    right: 5px;
+    top: 4px;
+}
+
+@media (max-width: 700px) {
+    :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud {
+        flex-wrap: wrap;
+        gap: 6px 9px;
+        justify-content: space-between;
+        padding: 6px 8px;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-brand > span:last-child {
+        display: none;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions {
+        margin-left: auto;
+    }
+}
+
+@media (max-width: 560px) {
+    :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-open-town {
+        max-width: 150px;
+    }
+}
+
+@media (max-width: 360px) {
+    :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud {
+        flex-wrap: wrap;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions {
+        order: 3;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-facts {
+        flex-basis: 100%;
+        order: 4;
+    }
+}

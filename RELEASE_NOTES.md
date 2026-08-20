@@ -1,6 +1,7 @@
 ## What changed
 
-- Added optional answer targets with a live, non-modal progress bar.
+- Added interactive review goals with quick choices, custom values, a live
+  countdown, and a non-modal progress bar.
 - Added custom focus lengths from 1 through 180 minutes and optional break
   countdowns from 1 through 60 minutes.
 - Added in-memory session recaps with answers, focused time, completed focus

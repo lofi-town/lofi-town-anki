@@ -81,7 +81,10 @@ def build_session_bootstrap(
         **session,
         "focusMinutes": normalized["focus_minutes"],
         "breakMinutes": normalized["break_minutes"],
-        "targetAnswers": normalized["session_target_answers"],
+        "targetAnswers": session.get(
+            "targetAnswers",
+            normalized["session_target_answers"],
+        ),
         "showAnswers": normalized["hud_show_answers"],
         "showRemaining": normalized["hud_show_remaining"],
         "showTimer": normalized["hud_show_timer"],

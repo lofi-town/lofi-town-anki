@@ -50,6 +50,24 @@
     min-width: 0;
 }
 
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-answers {
+    border: 0;
+    border-radius: 999px;
+    background: var(--lofi-accent-soft);
+    color: var(--lofi-text);
+    cursor: pointer;
+    font: inherit;
+    font-weight: 800;
+    margin: 0;
+    padding: 2px 8px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-answers:hover,
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-answers:focus-visible {
+    box-shadow: 0 0 0 2px var(--lofi-focus);
+    outline: 0;
+}
+
 :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-facts[hidden],
 :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-time[hidden] {
     display: none;
@@ -122,6 +140,75 @@
     display: none;
 }
 
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-goal-picker {
+    align-items: center;
+    border-radius: max(8px, calc(var(--lofi-radius) - 6px));
+    background: var(--lofi-raised);
+    display: flex;
+    flex: 1 1 auto;
+    gap: 5px;
+    min-width: 0;
+    padding: 3px 5px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-goal-picker[hidden] {
+    display: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-goal-picker strong {
+    color: var(--lofi-text);
+    font-weight: 800;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-goal-picker button,
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-goal-picker input,
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-goal-picker select {
+    border: 1px solid var(--lofi-border);
+    border-radius: 8px;
+    background: var(--lofi-card);
+    color: var(--lofi-text);
+    font: inherit;
+    min-height: 28px;
+    min-width: 0;
+    padding: 3px 8px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-goal-picker button {
+    cursor: pointer;
+    font-weight: 800;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-goal-picker button:hover {
+    border-color: var(--lofi-accent);
+    background: var(--lofi-accent-soft);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-goal-custom {
+    box-sizing: border-box;
+    width: 64px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-goal-custom[hidden] {
+    display: none;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-goal-choice {
+    flex: 1 1 100px;
+    max-width: 120px;
+    min-width: 80px;
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"]
+    #lofi-session-hud.has-goal-picker > :is(
+        .lofi-session-brand,
+        .lofi-session-facts,
+        .lofi-session-progress,
+        .lofi-session-time,
+        .lofi-session-actions
+    ) {
+    display: none;
+}
+
 :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-open-town {
     border-color: var(--lofi-accent);
     background: var(--lofi-accent);
@@ -135,6 +222,16 @@
 
 :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud.is-target-ready {
     border-color: var(--lofi-positive);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"]
+    #lofi-session-hud.is-target-ready #lofi-session-answers {
+    box-shadow: inset 0 0 0 1px var(--lofi-positive);
+}
+
+:root.lofi-town-theme[data-lofi-view="review-controls"]
+    #lofi-session-hud.is-target-ready #lofi-session-progress-fill {
+    background: var(--lofi-positive);
 }
 
 :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud.is-compact {
@@ -194,22 +291,45 @@
 }
 
 @media (max-width: 560px) {
+    :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud {
+        flex-wrap: nowrap;
+        gap: 6px;
+        justify-content: flex-start;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="review-controls"]
+        #lofi-session-hud > :is(.lofi-session-brand, .lofi-session-progress) {
+        display: none;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-facts {
+        white-space: nowrap;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions {
+        gap: 3px;
+        margin-left: 0;
+    }
+
+    :root.lofi-town-theme[data-lofi-view="review-controls"]
+        .lofi-session-actions button {
+        min-height: 28px;
+        padding: 3px 9px;
+    }
+
     :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-open-town {
         max-width: 150px;
     }
 }
 
 @media (max-width: 360px) {
-    :root.lofi-town-theme[data-lofi-view="review-controls"] #lofi-session-hud {
-        flex-wrap: wrap;
+    :root.lofi-town-theme[data-lofi-view="review-controls"]
+        .lofi-session-goal-picker strong {
+        display: none;
     }
 
-    :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-actions {
-        order: 3;
-    }
-
-    :root.lofi-town-theme[data-lofi-view="review-controls"] .lofi-session-facts {
-        flex-basis: 100%;
-        order: 4;
+    :root.lofi-town-theme[data-lofi-view="review-controls"]
+        #lofi-session-hud:not(.has-goal-picker) .lofi-session-time {
+        display: none;
     }
 }

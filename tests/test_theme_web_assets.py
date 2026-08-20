@@ -104,6 +104,7 @@ def test_session_strip_uses_live_anki_counts_and_namespaced_actions() -> None:
         "completedFocusMs": 0,
         "breakStartedAt": 0,
         "answers": 7,
+        "targetAnswers": 10,
         "targetStartedAnswers": 0,
     }
     script = build_session_bootstrap(DEFAULT_CONFIG, session)
@@ -114,10 +115,15 @@ def test_session_strip_uses_live_anki_counts_and_namespaced_actions() -> None:
     assert '"lofi-town:pause-focus"' in SESSION_JS
     assert '"lofi-town:start-break"' in SESSION_JS
     assert '"lofi-town:restart-target"' in SESSION_JS
+    assert "lofi-town:set-target:${target}" in SESSION_JS
     assert 'timerText: "Ready"' in SESSION_JS
     assert '"breakMinutes":5' in script
     assert '"showProgress":true' in script
     assert 'role="progressbar"' in SESSION_JS
+    assert 'id="lofi-session-goal-picker"' in SESSION_JS
+    assert 'id="lofi-session-goal-choice"' in SESSION_JS
+    assert "`${view.targetRemaining.toLocaleString()} to goal`" in SESSION_JS
+    assert "observer.observe(outer" in SESSION_JS
     assert "collection" not in (script + SESSION_JS).lower()
 
 
@@ -134,11 +140,14 @@ def test_session_strip_supports_custom_targets_and_hidden_facts() -> None:
         "hud_compact": True,
         "hud_position": "bottom",
     }
-    script = build_session_bootstrap(config, {"answers": 12})
+    script = build_session_bootstrap(
+        config,
+        {"answers": 12, "targetAnswers": 75},
+    )
 
     assert '"focusMinutes":37' in script
     assert '"breakMinutes":8' in script
-    assert '"targetAnswers":60' in script
+    assert '"targetAnswers":75' in script
     assert '"showAnswers":false' in script
     assert '"showRemaining":false' in script
     assert '"showTimer":false' in script

@@ -80,6 +80,7 @@ def check_session_hud(window: QMainWindow) -> None:
         "completedFocusMs": 0,
         "breakStartedAt": 0,
         "answers": 7,
+        "targetAnswers": 10,
         "targetStartedAnswers": 0,
     }
     script = build_session_bootstrap(config, session)
@@ -101,27 +102,56 @@ def check_session_hud(window: QMainWindow) -> None:
         html,
         "https://anki.local/reviewer",
         """
-        (() => ({
-          loaded: true,
-          hud: Boolean(document.getElementById("lofi-session-hud")),
-          position: document.getElementById("outer").nextElementSibling?.id,
-          answers: document.getElementById("lofi-session-answers")?.textContent,
-          remainingHidden: document.getElementById("lofi-session-workload")?.hidden,
-          timerHidden: document.getElementById("lofi-session-time")?.hidden,
-          progress: document
-            .getElementById("lofi-session-progress-fill")?.style.width,
-        }))()
+        (() => {
+          window.pycmd = (command) => { window.__lofiCommand = command; };
+          const answerText = document
+            .getElementById("lofi-session-answers")?.textContent;
+          const progress = document
+            .getElementById("lofi-session-progress-fill")?.style.width;
+          window.__lofiTownSession.update({
+            targetAnswers: 0,
+            targetStartedAnswers: 7,
+          });
+          document.getElementById("lofi-session-answers")?.click();
+          const goalPickerOpened = !document
+            .getElementById("lofi-session-goal-picker")?.hidden;
+          const goalChoice = document.getElementById("lofi-session-goal-choice");
+          goalChoice.value = "50";
+          goalChoice.dispatchEvent(new Event("change"));
+          const customGoalDisabled = document
+            .getElementById("lofi-session-goal-custom")?.disabled;
+          document.getElementById("lofi-session-goal-picker")?.requestSubmit();
+          return {
+            loaded: true,
+            hud: Boolean(document.getElementById("lofi-session-hud")),
+            position: document.getElementById("outer").nextElementSibling?.id,
+            answers: answerText,
+            customGoalDisabled,
+            goalPickerOpened,
+            goalPickerHiddenAfterChoice: document
+              .getElementById("lofi-session-goal-picker")?.hidden,
+            goalCommand: window.__lofiCommand,
+            remainingHidden: document.getElementById("lofi-session-workload")?.hidden,
+            timerHidden: document.getElementById("lofi-session-time")?.hidden,
+            progress,
+          };
+        })()
         """,
     )
-    assert result == {
+    expected = {
         "loaded": True,
         "hud": True,
         "position": "lofi-session-hud",
-        "answers": "7/10 answers",
+        "answers": "3 to goal",
+        "customGoalDisabled": True,
+        "goalPickerOpened": True,
+        "goalPickerHiddenAfterChoice": True,
+        "goalCommand": "lofi-town:set-target:50",
         "remainingHidden": True,
         "timerHidden": True,
         "progress": "70%",
     }
+    assert result == expected, result
 
 
 def check_session_recap(window: QMainWindow) -> None:

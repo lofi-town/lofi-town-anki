@@ -16,6 +16,7 @@ def test_tracks_answers_and_independent_focus_time() -> None:
         "completedFocusMs": 0,
         "breakStartedAt": 0,
         "answers": 0,
+        "targetAnswers": 0,
         "targetStartedAnswers": 0,
     }
 
@@ -59,6 +60,7 @@ def test_pause_resume_and_reset_are_idempotent() -> None:
 def test_tracks_targets_breaks_blocks_and_summary() -> None:
     now = [100.0]
     session = StudySession(clock=lambda: now[0])
+    session.ensure_answer_target(2)
     session.record_answer()
     session.record_answer()
 
@@ -67,7 +69,7 @@ def test_tracks_targets_breaks_blocks_and_summary() -> None:
     assert session.break_started_at_ms == 400_000
     assert session.focus_paused_at_ms == 400_000
 
-    summary = session.summary(focus_minutes=5, target_answers=2)
+    summary = session.summary(focus_minutes=5)
     assert session.phase is SessionPhase.BREAK
     assert summary == SessionSummary(
         answers=2,
@@ -79,7 +81,7 @@ def test_tracks_targets_breaks_blocks_and_summary() -> None:
     )
 
     session.restart_focus_block(5)
-    session.restart_answer_target(2)
+    session.restart_answer_target()
     assert session.completed_focus_ms == 300_000
     assert session.completed_blocks == 1
     assert session.break_started_at_ms == 0
@@ -87,7 +89,7 @@ def test_tracks_targets_breaks_blocks_and_summary() -> None:
     assert session.completed_targets == 1
 
     session.record_answer()
-    partial = session.summary(focus_minutes=5, target_answers=2)
+    partial = session.summary(focus_minutes=5)
     assert partial.target_progress == 1
     assert partial.targets_completed == 1
 
@@ -100,7 +102,7 @@ def test_focus_summary_accumulates_across_blocks() -> None:
     session.restart_focus_block(1)
     now[0] = 100.0
 
-    summary = session.summary(focus_minutes=1, target_answers=0)
+    summary = session.summary(focus_minutes=1)
     assert summary.focused_ms == 90_000
     assert summary.blocks_completed == 1
 
@@ -117,3 +119,21 @@ def test_break_rejects_stale_resume_transition() -> None:
     assert session.phase is SessionPhase.BREAK
     assert session.focus_paused_at_ms == 20_000
     assert session.focused_ms() == 10_000
+
+
+def test_answer_goal_can_be_changed_and_repeated_mid_session() -> None:
+    session = StudySession(clock=lambda: 10.0)
+    session.ensure_answer_target(25)
+    session.record_answer()
+    session.set_answer_target(2)
+
+    assert session.target_answers == 2
+    assert session.target_started_answers == 1
+
+    session.record_answer()
+    session.record_answer()
+    session.restart_answer_target()
+
+    assert session.completed_targets == 1
+    assert session.target_answers == 2
+    assert session.target_started_answers == 3

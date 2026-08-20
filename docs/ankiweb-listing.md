@@ -18,8 +18,8 @@ Keep the live Lofi Town beside your flashcards in a resizable Anki panel.
 ### Included
 
 - Dock Lofi Town on either side of Anki or pop it into a floating window.
-- Set an optional answer target with a live progress bar and an honest,
-  non-modal completion state.
+- Set or change a review goal from the reviewer, then follow a live countdown
+  and non-modal completion state.
 - Use custom focus and break lengths with pause, skip, and restart controls.
 - Choose which session facts appear, use a compact layout, and place the strip
   above or below Anki's answer buttons.

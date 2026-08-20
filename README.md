@@ -69,7 +69,7 @@ Get-FileHash .\lofi-town.ankiaddon -Algorithm SHA256
 - Drag the panel edge to resize it or drag it between the left and right sides.
 - Use the title-bar pop-out button to move Lofi Town into its own window or
   dock it back into Anki.
-- Choose **Tools > Lofi Town Settings...** to adjust the theme, answer target,
+- Choose **Tools > Lofi Town Settings...** to adjust the theme, review goal,
   focus and break blocks, reviewer strip, motion, spacing, and low-resource mode.
 - Google and Discord sign-in open in the system browser and return to Anki.
   Keep Anki running until sign-in finishes.
@@ -105,8 +105,10 @@ Lofi Town account data is managed separately under the
   browsing sessions.
 - Adds customizable light and dark Anki themes with adjustable color, spacing,
   text size, roundness, motion, and texture.
-- Adds optional answer targets, a live progress bar, custom focus and break
-  lengths, answer-key hints, and quiet reviewer mode.
+- Adds interactive review goals with a live countdown, quick choices, custom
+  targets, and a non-modal progress bar.
+- Adds custom focus and break lengths, answer-key hints, and quiet reviewer
+  mode.
 - Lets users independently hide answers, remaining cards, time, or progress,
   and move the reviewer strip below Anki's answer buttons.
 - Shows an in-memory recap after a review session with answers, focused time,

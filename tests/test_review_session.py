@@ -1,6 +1,10 @@
 from __future__ import annotations
 
-from addon.review_session import ReviewSessionConfig, ReviewSessionController
+from addon.review_session import (
+    ReviewSessionConfig,
+    ReviewSessionController,
+    parse_target_command,
+)
 from addon.session import SessionPhase, StudySession
 
 
@@ -85,6 +89,31 @@ def test_unknown_or_disabled_commands_are_not_claimed() -> None:
     assert review.handle_command("lofi-town:pause-focus", disabled) is None
 
 
+def test_review_goal_can_be_set_from_the_reviewer() -> None:
+    review = controller([10.0])
+    settings = config(target_answers=0)
+    review.record_answer(settings)
+
+    outcome = review.handle_command("lofi-town:set-target:50", settings)
+
+    assert outcome is not None
+    assert review.session.target_answers == 50
+    assert review.session.target_started_answers == 1
+    assert review.payload(settings)["targetAnswers"] == 50
+
+
+def test_target_command_rejects_malformed_or_out_of_range_values() -> None:
+    assert parse_target_command("lofi-town:set-target:25") == 25
+    for command in (
+        "lofi-town:set-target:0",
+        "lofi-town:set-target:5001",
+        "lofi-town:set-target:1.5",
+        "lofi-town:set-target:\uff11\uff12",
+        "lofi-town:set-target:",
+    ):
+        assert parse_target_command(command) is None
+
+
 def test_disabling_hud_resets_local_session() -> None:
     review = controller([10.0])
     review.record_answer(config())
@@ -105,7 +134,7 @@ def test_reviewer_payload_contains_only_aggregate_session_state() -> None:
     review = controller([10.0])
     review.record_answer(config())
 
-    payload = review.payload()
+    payload = review.payload(config())
 
     assert set(payload) == {
         "phase",
@@ -116,6 +145,7 @@ def test_reviewer_payload_contains_only_aggregate_session_state() -> None:
         "completedFocusMs",
         "breakStartedAt",
         "answers",
+        "targetAnswers",
         "targetStartedAnswers",
     }
     for forbidden in ("card", "deck", "rating", "remaining"):

@@ -54,6 +54,8 @@ def test_review_controls_are_the_only_source_for_session_commands() -> None:
     for command in commands:
         assert is_trusted_lofi_command(command, controls)
         assert not is_trusted_lofi_command(command, reviewer)
+    assert is_trusted_lofi_command("lofi-town:set-target:50", controls)
+    assert not is_trusted_lofi_command("lofi-town:set-target:50", reviewer)
 
 
 def test_completion_screen_only_accepts_open_command() -> None:
@@ -82,4 +84,7 @@ def test_unknown_commands_and_contexts_are_rejected() -> None:
     unknown = context("some_addon.dialog", "Dialog")
 
     assert not is_trusted_lofi_command("lofi-town:unknown", controls)
+    assert not is_trusted_lofi_command("lofi-town:set-target:0", controls)
+    assert not is_trusted_lofi_command("lofi-town:set-target:5001", controls)
+    assert not is_trusted_lofi_command("lofi-town:set-target:50:open", controls)
     assert not is_trusted_lofi_command("lofi-town:open", unknown)

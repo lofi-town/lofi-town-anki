@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import Any
 
+from .review_session import parse_target_command
+
 _CONTEXT_VIEWS = {
     ("aqt.deckbrowser", "DeckBrowser"): "deck-browser",
     ("aqt.deckbrowser", "DeckBrowserBottomBar"): "bottom-toolbar",
@@ -48,5 +50,8 @@ def is_trusted_lofi_command(
 ) -> bool:
     view = classify_context(context)
     if view == "review-controls":
-        return message in _REVIEW_CONTROL_COMMANDS
+        return (
+            message in _REVIEW_CONTROL_COMMANDS
+            or parse_target_command(message) is not None
+        )
     return view == "overview" and completion_view and message == "lofi-town:open"

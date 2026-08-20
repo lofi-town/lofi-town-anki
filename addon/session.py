@@ -6,6 +6,8 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import TypedDict
 
+MAX_ANSWER_TARGET = 5_000
+
 
 class SessionPhase(str, Enum):
     READY = "ready"
@@ -23,6 +25,7 @@ class SessionPayload(TypedDict):
     completedFocusMs: int
     breakStartedAt: int
     answers: int
+    targetAnswers: int
     targetStartedAnswers: int
 
 
@@ -45,6 +48,7 @@ class SessionSnapshot:
     completed_focus_ms: int
     break_started_at_ms: int
     answers: int
+    target_answers: int
     target_started_answers: int
 
     def to_payload(self) -> SessionPayload:
@@ -57,6 +61,7 @@ class SessionSnapshot:
             "completedFocusMs": self.completed_focus_ms,
             "breakStartedAt": self.break_started_at_ms,
             "answers": self.answers,
+            "targetAnswers": self.target_answers,
             "targetStartedAnswers": self.target_started_answers,
         }
 
@@ -94,7 +99,9 @@ class StudySession:
     completed_targets: int = 0
     break_started_at_ms: int = 0
     answers: int = 0
+    target_answers: int = 0
     target_started_answers: int = 0
+    target_initialized: bool = False
 
     def start(self) -> None:
         if self.phase is SessionPhase.READY:
@@ -137,9 +144,26 @@ class StudySession:
         self.break_started_at_ms = 0
         self.phase = SessionPhase.FOCUSING
 
-    def restart_answer_target(self, target_answers: int = 0) -> None:
+    def ensure_answer_target(self, target_answers: int) -> None:
+        if self.target_initialized:
+            return
+        self._validate_answer_target(target_answers)
+        self.target_answers = target_answers
+        self.target_started_answers = self.answers
+        self.target_initialized = True
+
+    def set_answer_target(self, target_answers: int) -> None:
+        self._validate_answer_target(target_answers)
         target_progress = max(0, self.answers - self.target_started_answers)
-        if target_answers and target_progress >= target_answers:
+        if self.target_answers and target_progress >= self.target_answers:
+            self.completed_targets += 1
+        self.target_answers = target_answers
+        self.target_started_answers = self.answers
+        self.target_initialized = True
+
+    def restart_answer_target(self) -> None:
+        target_progress = max(0, self.answers - self.target_started_answers)
+        if self.target_answers and target_progress >= self.target_answers:
             self.completed_targets += 1
         self.target_started_answers = self.answers
 
@@ -162,19 +186,21 @@ class StudySession:
     def focused_ms(self, now_ms: int | None = None) -> int:
         return self.completed_focus_ms + self.current_block_focused_ms(now_ms)
 
-    def summary(self, focus_minutes: int, target_answers: int) -> SessionSummary:
+    def summary(self, focus_minutes: int) -> SessionSummary:
         now = self._now_ms()
         current_block_ms = self.current_block_focused_ms(now)
         blocks_completed = self.completed_blocks
         if focus_minutes and current_block_ms >= focus_minutes * 60 * 1000:
             blocks_completed += 1
         target_progress = max(0, self.answers - self.target_started_answers)
-        target_reached = target_answers > 0 and target_progress >= target_answers
+        target_reached = (
+            self.target_answers > 0 and target_progress >= self.target_answers
+        )
         return SessionSummary(
             answers=self.answers,
             focused_ms=self.focused_ms(now),
             blocks_completed=blocks_completed,
-            target_answers=target_answers,
+            target_answers=self.target_answers,
             target_progress=target_progress,
             targets_completed=self.completed_targets + int(target_reached),
         )
@@ -190,7 +216,9 @@ class StudySession:
         self.completed_targets = 0
         self.break_started_at_ms = 0
         self.answers = 0
+        self.target_answers = 0
         self.target_started_answers = 0
+        self.target_initialized = False
 
     def snapshot(self) -> SessionSnapshot:
         return SessionSnapshot(
@@ -202,6 +230,7 @@ class StudySession:
             completed_focus_ms=self.completed_focus_ms,
             break_started_at_ms=self.break_started_at_ms,
             answers=self.answers,
+            target_answers=self.target_answers,
             target_started_answers=self.target_started_answers,
         )
 
@@ -210,3 +239,8 @@ class StudySession:
 
     def _now_ms(self) -> int:
         return round(self.clock() * 1000)
+
+    @staticmethod
+    def _validate_answer_target(target_answers: int) -> None:
+        if not 0 <= target_answers <= MAX_ANSWER_TARGET:
+            raise ValueError("answer target must be between 0 and 5000")

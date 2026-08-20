@@ -110,8 +110,8 @@ class StudyCompanionSettings(QWidget):
         self.session_target_answers.setSpecialValueText("Until deck is clear")
         self.session_target_answers.setSuffix(" answers")
         target_row = self._row_with_control(
-            "Answer target",
-            "A local session goal that never changes scheduling.",
+            "Review goal",
+            "Count down answers locally without changing scheduling.",
             self.session_target_answers,
         )
         quiet_row, self.review_focus_mode = self._toggle_setting(
@@ -152,8 +152,8 @@ class StudyCompanionSettings(QWidget):
             "Use less space and hide the strip label.",
         )
         answers_row, self.hud_show_answers = self._toggle_setting(
-            "Answer count",
-            "Show reviewer answers from this session.",
+            "Goal countdown",
+            "Show answers or the number remaining in your review goal.",
         )
         remaining_row, self.hud_show_remaining = self._toggle_setting(
             "Remaining count",

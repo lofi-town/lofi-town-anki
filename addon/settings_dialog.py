@@ -139,7 +139,7 @@ class ThemeSettingsDialog(QDialog):
         self._preview_session_brand = QLabel("LOFI.TOWN FOCUS", self._preview_session)
         self._preview_session_brand.setObjectName("previewSessionBrand")
         self._preview_session_facts = QLabel(
-            "7 answers · 12 remaining", self._preview_session
+            "7 answers · 12 due", self._preview_session
         )
         self._preview_session_facts.setObjectName("previewSessionFacts")
         self._preview_session_time = QLabel("25:00 focus", self._preview_session)
@@ -485,11 +485,14 @@ class ThemeSettingsDialog(QDialog):
         facts = []
         if study.hud_show_answers:
             if study.session_target_answers:
-                facts.append(f"7/{study.session_target_answers} answers")
+                remaining = max(0, study.session_target_answers - 7)
+                facts.append(
+                    "Goal complete" if not remaining else f"{remaining} to goal"
+                )
             else:
-                facts.append("7 answers")
+                facts.append("7 answers · Set goal")
         if study.hud_show_remaining:
-            facts.append("12 remaining")
+            facts.append("12 due")
         self._preview_session_facts.setText(" · ".join(facts))
         self._preview_session_facts.setVisible(bool(facts))
         self._preview_session_time.setVisible(study.hud_show_timer)

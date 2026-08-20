@@ -2,6 +2,7 @@
   let state = window.__lofiTownSessionBootstrap;
   let timer;
   let observer;
+  let goalPickerOpen = false;
 
   const formatDuration = (milliseconds) => {
     const totalSeconds = Math.max(0, Math.ceil(milliseconds / 1000));
@@ -67,12 +68,16 @@
     const targetComplete = Boolean(
       state.targetAnswers && targetProgress >= state.targetAnswers,
     );
+    const targetRemaining = state.targetAnswers
+      ? Math.max(0, state.targetAnswers - targetProgress)
+      : 0;
     const paused = Boolean(state.focusPausedAt);
     const view = {
       phase,
       paused,
       targetProgress,
       targetComplete,
+      targetRemaining,
       progress: deriveProgress(now, targetProgress, phase),
       timerText: "Ready",
       statusText: "",
@@ -116,6 +121,31 @@
     return view;
   };
 
+  const setGoalPickerOpen = (open) => {
+    goalPickerOpen = open;
+    render();
+    if (!open) return;
+    const choice = document.getElementById("lofi-session-goal-choice");
+    const custom = document.getElementById("lofi-session-goal-custom");
+    const preset = [25, 50, 100, 200].includes(state.targetAnswers);
+    const customGoal = state.targetAnswers > 0 && !preset;
+    let initialChoice = "50";
+    if (preset) initialChoice = String(state.targetAnswers);
+    else if (customGoal) initialChoice = "custom";
+    choice.value = initialChoice;
+    custom.value = customGoal ? state.targetAnswers : "";
+    custom.hidden = !customGoal;
+    custom.disabled = !customGoal;
+    (customGoal ? custom : choice).focus();
+  };
+
+  const chooseGoal = (target) => {
+    if (!Number.isInteger(target) || target < 1 || target > 5000) return;
+    goalPickerOpen = false;
+    send(`lofi-town:set-target:${target}`);
+    render();
+  };
+
   const renderWorkload = () => {
     const workload = document.getElementById("lofi-session-workload");
     if (!workload) return;
@@ -123,8 +153,8 @@
     if (!state.showRemaining) return;
     const remaining = readRemaining();
     workload.textContent = remaining.nodes.length
-      ? `${remaining.total.toLocaleString()} remaining`
-      : "remaining hidden";
+      ? `${remaining.total.toLocaleString()} due`
+      : "due hidden";
   };
 
   const renderProgress = (progress) => {
@@ -153,13 +183,26 @@
     const openTown = document.getElementById("lofi-session-open-town");
     const restartTarget = document.getElementById("lofi-session-restart-target");
     const separator = document.getElementById("lofi-session-facts-separator");
+    const goalPicker = document.getElementById("lofi-session-goal-picker");
 
     answerCount.hidden = !state.showAnswers;
     facts.hidden = !state.showAnswers && !state.showRemaining;
     time.hidden = !state.showTimer;
-    answerCount.textContent = state.targetAnswers
-      ? `${view.targetProgress.toLocaleString()}/${state.targetAnswers.toLocaleString()} answers`
-      : `${state.answers.toLocaleString()} ${state.answers === 1 ? "answer" : "answers"}`;
+    if (state.targetAnswers) {
+      answerCount.textContent = view.targetComplete
+        ? "Goal complete"
+        : `${view.targetRemaining.toLocaleString()} to goal`;
+      answerCount.setAttribute(
+        "aria-label",
+        view.targetComplete
+          ? "Answer goal complete. Change goal"
+          : `${view.targetRemaining.toLocaleString()} reviews remaining to goal. Change goal`,
+      );
+    } else {
+      const answered = `${state.answers.toLocaleString()} ${state.answers === 1 ? "answer" : "answers"}`;
+      answerCount.textContent = state.answers ? `${answered} · Set goal` : "Set goal";
+      answerCount.setAttribute("aria-label", `${answered}. Set an answer goal`);
+    }
     separator.hidden = !state.showAnswers || !state.showRemaining;
     renderWorkload();
     renderProgress(view.progress);
@@ -167,9 +210,15 @@
     hud.classList.toggle("is-compact", state.compact);
     hud.classList.toggle("is-target-ready", view.targetComplete);
     hud.classList.toggle("is-break-ready", view.breakReady);
+    hud.classList.toggle("has-goal-picker", goalPickerOpen);
+    goalPicker.hidden = !goalPickerOpen;
+    answerCount.setAttribute("aria-expanded", goalPickerOpen ? "true" : "false");
     restartTarget.hidden = view.phase === "ready" || !view.targetComplete;
     time.textContent = view.timerText;
-    status.textContent = view.statusText;
+    status.textContent = [
+      view.statusText,
+      view.targetComplete ? "Review goal complete." : "",
+    ].filter(Boolean).join(" ");
 
     pause.hidden = !view.pauseVisible;
     pause.textContent = view.paused ? "Resume" : "Pause";
@@ -193,9 +242,10 @@
         <strong>lofi.town</strong><span>focus</span>
       </div>
       <div class="lofi-session-facts">
-        <span id="lofi-session-answers">0 answers</span>
+        <button id="lofi-session-answers" type="button" aria-expanded="false"
+          aria-controls="lofi-session-goal-picker">Set goal</button>
         <span id="lofi-session-facts-separator" aria-hidden="true">·</span>
-        <span id="lofi-session-workload">remaining hidden</span>
+        <span id="lofi-session-workload">due hidden</span>
       </div>
       <div id="lofi-session-progress" class="lofi-session-progress"
         role="progressbar" aria-valuemin="0" aria-valuemax="100" hidden>
@@ -206,9 +256,23 @@
         <button id="lofi-session-pause" type="button" aria-pressed="false">Pause</button>
         <button id="lofi-session-restart" type="button" hidden>Another block</button>
         <button id="lofi-session-start-break" type="button" hidden>Start break</button>
-        <button id="lofi-session-restart-target" type="button" hidden>Another target</button>
+        <button id="lofi-session-restart-target" type="button" hidden>Repeat goal</button>
         <button id="lofi-session-open-town" type="button" hidden>Break in Lofi Town</button>
       </div>
+      <form id="lofi-session-goal-picker" class="lofi-session-goal-picker" hidden>
+        <strong>Goal</strong>
+        <select id="lofi-session-goal-choice" aria-label="Review goal">
+          <option value="25">25 reviews</option>
+          <option value="50">50 reviews</option>
+          <option value="100">100 reviews</option>
+          <option value="200">200 reviews</option>
+          <option value="custom">Custom</option>
+        </select>
+        <input id="lofi-session-goal-custom" type="number" min="1" max="5000"
+          step="1" inputmode="numeric" aria-label="Custom review goal" required disabled>
+        <button type="submit">Set</button>
+        <button id="lofi-session-goal-close" type="button" aria-label="Close goal picker">Close</button>
+      </form>
       <span id="lofi-session-status" class="lofi-visually-hidden"
         role="status" aria-live="polite"></span>`;
     if (state.position === "bottom") outer.insertAdjacentElement("afterend", hud);
@@ -229,16 +293,48 @@
       "click",
       () => send("lofi-town:restart-target"),
     );
+    document.getElementById("lofi-session-answers").addEventListener(
+      "click",
+      () => setGoalPickerOpen(!goalPickerOpen),
+    );
+    document.getElementById("lofi-session-goal-choice").addEventListener(
+      "change",
+      (event) => {
+        const custom = document.getElementById("lofi-session-goal-custom");
+        custom.hidden = event.target.value !== "custom";
+        custom.disabled = custom.hidden;
+        if (!custom.hidden) custom.focus();
+      },
+    );
+    document.getElementById("lofi-session-goal-picker").addEventListener(
+      "submit",
+      (event) => {
+        event.preventDefault();
+        const choice = document.getElementById("lofi-session-goal-choice");
+        const input = document.getElementById("lofi-session-goal-custom");
+        if (choice.value === "custom") {
+          if (!input.reportValidity()) return;
+          chooseGoal(Number(input.value));
+          return;
+        }
+        chooseGoal(Number(choice.value));
+      },
+    );
+    document.getElementById("lofi-session-goal-close").addEventListener(
+      "click",
+      () => setGoalPickerOpen(false),
+    );
     document.getElementById("lofi-session-open-town").addEventListener(
       "click",
       () => send("lofi-town:take-break"),
     );
 
-    const remaining = readRemaining();
     observer = new MutationObserver(renderWorkload);
-    remaining.nodes.forEach((node) =>
-      observer.observe(node, { childList: true, characterData: true, subtree: true }),
-    );
+    observer.observe(outer, {
+      childList: true,
+      characterData: true,
+      subtree: true,
+    });
     window.__lofiTownSession = {
       update(next) {
         state = { ...state, ...next };

@@ -1,6 +1,6 @@
 # Privacy
 
-Last updated: August 19, 2026
+Last updated: August 20, 2026
 
 ## Add-on data
 
@@ -13,7 +13,7 @@ The add-on stores these items locally:
 - An isolated browser profile, including Lofi Town cookies, local storage, and
   cache files, inside the add-on's `user_files/` directory.
 
-The review answer count, answer-target progress, local focus and break timers,
+The review answer count, selected review goal, local focus and break timers,
 and aggregate session recap are kept in memory. The recap contains only answer
 events, focused duration, and completed target counts. It is discarded after it
 is rendered or when the Anki profile closes. This information is not written to

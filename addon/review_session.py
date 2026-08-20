@@ -4,7 +4,19 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
 
-from .session import SessionSummary, StudySession
+from .session import MAX_ANSWER_TARGET, SessionSummary, StudySession
+
+_TARGET_COMMAND_PREFIX = "lofi-town:set-target:"
+
+
+def parse_target_command(command: str) -> int | None:
+    if not command.startswith(_TARGET_COMMAND_PREFIX):
+        return None
+    raw_target = command.removeprefix(_TARGET_COMMAND_PREFIX)
+    if not raw_target.isascii() or not raw_target.isdecimal():
+        return None
+    target = int(raw_target)
+    return target if 1 <= target <= MAX_ANSWER_TARGET else None
 
 
 @dataclass(frozen=True, slots=True)
@@ -41,6 +53,7 @@ class ReviewSessionController:
     ) -> None:
         self.session = session or StudySession()
         self._pending_summary: SessionSummary | None = None
+        self._configured_target_answers: int | None = None
         self._commands: dict[
             str, Callable[[ReviewSessionConfig], CommandOutcome]
         ] = {
@@ -55,6 +68,7 @@ class ReviewSessionController:
     def record_answer(self, config: ReviewSessionConfig) -> bool:
         if not config.active:
             return False
+        self._sync_configured_target(config)
         first_answer = self.session.answers == 0
         if first_answer:
             self._pending_summary = None
@@ -62,11 +76,9 @@ class ReviewSessionController:
         return True
 
     def finish(self, config: ReviewSessionConfig) -> None:
+        self._sync_configured_target(config)
         if self.session.answers:
-            self._pending_summary = self.session.summary(
-                config.focus_minutes,
-                config.target_answers,
-            )
+            self._pending_summary = self.session.summary(config.focus_minutes)
         self.session.reset()
 
     def close(self) -> None:
@@ -79,6 +91,8 @@ class ReviewSessionController:
     def apply_config_change(self, current: ReviewSessionConfig) -> None:
         if not current.active:
             self.session.reset()
+            return
+        self._sync_configured_target(current)
 
     def handle_command(
         self,
@@ -87,10 +101,15 @@ class ReviewSessionController:
     ) -> CommandOutcome | None:
         if not config.active:
             return None
+        self._sync_configured_target(config)
+        if target := parse_target_command(command):
+            self.session.set_answer_target(target)
+            return CommandOutcome()
         handler = self._commands.get(command)
         return handler(config) if handler is not None else None
 
-    def payload(self) -> dict[str, object]:
+    def payload(self, config: ReviewSessionConfig) -> dict[str, object]:
+        self._sync_configured_target(config)
         return dict(self.session.payload())
 
     def take_summary(self) -> SessionSummary | None:
@@ -118,9 +137,20 @@ class ReviewSessionController:
         return CommandOutcome()
 
     def _restart_target(self, config: ReviewSessionConfig) -> CommandOutcome:
-        self.session.restart_answer_target(config.target_answers)
+        self.session.restart_answer_target()
         return CommandOutcome()
 
     def _take_break(self, config: ReviewSessionConfig) -> CommandOutcome:
         self._start_break(config)
         return CommandOutcome(show_town=True)
+
+    def _sync_configured_target(self, config: ReviewSessionConfig) -> None:
+        changed = (
+            self._configured_target_answers is not None
+            and self._configured_target_answers != config.target_answers
+        )
+        self._configured_target_answers = config.target_answers
+        if changed and self.session.target_initialized:
+            self.session.set_answer_target(config.target_answers)
+            return
+        self.session.ensure_answer_target(config.target_answers)

@@ -163,7 +163,7 @@ class AddonController:
             )
             web_content.head += build_session_bootstrap(
                 self._theme_config,
-                self._review_session.payload(),
+                self._review_session.payload(self._review_session_config()),
             )
             web_content.js.append(
                 f"/_addons/{self._package}/web/review_session.js"
@@ -253,7 +253,7 @@ class AddonController:
         if web is None:
             return
         payload = json.dumps(
-            self._review_session.payload(),
+            self._review_session.payload(self._review_session_config()),
             separators=(",", ":"),
         )
         web.eval(f"window.__lofiTownSession?.update({payload});")

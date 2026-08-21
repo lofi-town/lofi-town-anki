@@ -65,6 +65,7 @@ def test_recap_uses_only_aggregate_session_values() -> None:
     assert '"answers":60' in script
     assert '"focusedMs":1500000' in script
     assert '"showDismissButton":true' in script
+    assert '"showTimer":false' in script
     assert "reached your ${summary.targetAnswers}-answer target" in RECAP_JS
     assert 'dismiss.id = "lofi-town-recap-dismiss"' in RECAP_JS
     for forbidden in ("cardId", "cardContent", "deckId", "deckName", "rating"):
@@ -117,13 +118,16 @@ def test_session_strip_uses_live_anki_counts_and_namespaced_actions() -> None:
     assert '"lofi-town:restart-target"' in SESSION_JS
     assert "lofi-town:set-target:${target}" in SESSION_JS
     assert 'timerText: "Ready"' in SESSION_JS
-    assert '"breakMinutes":5' in script
+    assert '"breakMinutes":0' in script
+    assert '"showTimer":false' in script
     assert '"showProgress":true' in script
     assert 'role="progressbar"' in SESSION_JS
     assert 'id="lofi-session-goal-picker"' in SESSION_JS
     assert 'id="lofi-session-goal-choice"' in SESSION_JS
     assert "`${view.targetRemaining.toLocaleString()} to goal`" in SESSION_JS
     assert "observer.observe(outer" in SESSION_JS
+    assert "!state.showTimer || !view.pauseVisible" in SESSION_JS
+    assert "!state.showTimer || !state.focusMinutes" in SESSION_JS
     assert "collection" not in (script + SESSION_JS).lower()
 
 

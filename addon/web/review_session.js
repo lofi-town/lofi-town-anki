@@ -45,7 +45,7 @@
         label: `${Math.min(targetProgress, state.targetAnswers)} of ${state.targetAnswers} target answers`,
       };
     }
-    if (!state.focusMinutes || !state.startedAt) return null;
+    if (!state.showTimer || !state.focusMinutes || !state.startedAt) return null;
     if (phase === "break") {
       return {
         ratio:
@@ -184,10 +184,17 @@
     const restartTarget = document.getElementById("lofi-session-restart-target");
     const separator = document.getElementById("lofi-session-facts-separator");
     const goalPicker = document.getElementById("lofi-session-goal-picker");
+    const brand = document.querySelector(".lofi-session-brand");
+    const brandMode = document.getElementById("lofi-session-brand-mode");
 
     answerCount.hidden = !state.showAnswers;
     facts.hidden = !state.showAnswers && !state.showRemaining;
     time.hidden = !state.showTimer;
+    brand.setAttribute(
+      "aria-label",
+      state.showTimer ? "Lofi Town focus" : "Lofi Town goals",
+    );
+    brandMode.textContent = state.showTimer ? "focus" : "goals";
     if (state.targetAnswers) {
       answerCount.textContent = view.targetComplete
         ? "Goal complete"
@@ -216,18 +223,18 @@
     restartTarget.hidden = view.phase === "ready" || !view.targetComplete;
     time.textContent = view.timerText;
     status.textContent = [
-      view.statusText,
+      state.showTimer ? view.statusText : "",
       view.targetComplete ? "Review goal complete." : "",
     ].filter(Boolean).join(" ");
 
-    pause.hidden = !view.pauseVisible;
+    pause.hidden = !state.showTimer || !view.pauseVisible;
     pause.textContent = view.paused ? "Resume" : "Pause";
     pause.setAttribute("aria-pressed", view.paused ? "true" : "false");
-    restart.hidden = !view.restartVisible;
+    restart.hidden = !state.showTimer || !view.restartVisible;
     restart.textContent = view.restartText;
-    startBreak.hidden = !view.breakVisible;
+    startBreak.hidden = !state.showTimer || !view.breakVisible;
     startBreak.textContent = `Start ${state.breakMinutes} min break`;
-    openTown.hidden = !view.townVisible;
+    openTown.hidden = !state.showTimer || !view.townVisible;
   };
 
   const install = () => {
@@ -237,9 +244,9 @@
     hud.id = "lofi-session-hud";
     hud.setAttribute("aria-label", "Review session");
     hud.innerHTML = `
-      <div class="lofi-session-brand" aria-label="Lofi Town focus">
+      <div class="lofi-session-brand" aria-label="Lofi Town goals">
         <span class="lofi-session-light" aria-hidden="true"></span>
-        <strong>lofi.town</strong><span>focus</span>
+        <strong>lofi.town</strong><span id="lofi-session-brand-mode">goals</span>
       </div>
       <div class="lofi-session-facts">
         <button id="lofi-session-answers" type="button" aria-expanded="false"

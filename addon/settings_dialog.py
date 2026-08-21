@@ -136,7 +136,7 @@ class ThemeSettingsDialog(QDialog):
         session_layout = QHBoxLayout(self._preview_session)
         session_layout.setContentsMargins(11, 8, 11, 8)
         session_layout.setSpacing(8)
-        self._preview_session_brand = QLabel("LOFI.TOWN FOCUS", self._preview_session)
+        self._preview_session_brand = QLabel("LOFI.TOWN GOALS", self._preview_session)
         self._preview_session_brand.setObjectName("previewSessionBrand")
         self._preview_session_facts = QLabel(
             "7 answers · 12 due", self._preview_session
@@ -482,6 +482,9 @@ class ThemeSettingsDialog(QDialog):
         self._preview_panel.setEnabled(enabled)
         self._preview_session.setVisible(session_enabled)
         self._preview_session_brand.setVisible(not study.hud_compact)
+        self._preview_session_brand.setText(
+            "LOFI.TOWN FOCUS" if study.hud_show_timer else "LOFI.TOWN GOALS"
+        )
         facts = []
         if study.hud_show_answers:
             if study.session_target_answers:

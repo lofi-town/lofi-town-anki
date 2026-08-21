@@ -8,7 +8,7 @@
     return `${hours} hr${remaining ? ` ${remaining} min` : ""}`;
   };
 
-  const recapContent = (summary) => {
+  const recapContent = (summary, showTimer) => {
     if (!summary) {
       return {
         eyebrow: "LOFI.TOWN STUDY ROOM",
@@ -17,11 +17,13 @@
         stats: [],
       };
     }
-    const stats = [
-      `<span><strong>${summary.answers}</strong> answers</span>`,
-      `<span><strong>${formatFocused(summary.focusedMs)}</strong> focused</span>`,
-    ];
-    if (summary.blocksCompleted) {
+    const stats = [`<span><strong>${summary.answers}</strong> answers</span>`];
+    if (showTimer) {
+      stats.push(
+        `<span><strong>${formatFocused(summary.focusedMs)}</strong> focused</span>`,
+      );
+    }
+    if (showTimer && summary.blocksCompleted) {
       const label = summary.blocksCompleted === 1 ? "block" : "blocks";
       stats.push(
         `<span><strong>${summary.blocksCompleted}</strong> focus ${label}</span>`,
@@ -69,7 +71,7 @@
       : document.querySelector("main") || document.body;
     if (!target) return;
 
-    const content = recapContent(config.summary);
+    const content = recapContent(config.summary, config.showTimer);
     const card = document.createElement("section");
     card.id = isCongrats && !config.showDismissButton
       ? "lofi-town-completion"

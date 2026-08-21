@@ -112,6 +112,21 @@ def check_session_hud(window: QMainWindow) -> None:
             targetAnswers: 0,
             targetStartedAnswers: 7,
           });
+          const progressHiddenWithoutGoal = document
+            .getElementById("lofi-session-progress")?.hidden;
+          const brandMode = document
+            .getElementById("lofi-session-brand-mode")?.textContent;
+          const now = Date.now();
+          window.__lofiTownSession.update({
+            showTimer: true,
+            startedAt: now,
+            focusStartedAt: now,
+          });
+          const timerVisibleWhenEnabled = !document
+            .getElementById("lofi-session-time")?.hidden;
+          const pauseVisibleWhenEnabled = !document
+            .getElementById("lofi-session-pause")?.hidden;
+          window.__lofiTownSession.update({ showTimer: false });
           document.getElementById("lofi-session-answers")?.click();
           const goalPickerOpened = !document
             .getElementById("lofi-session-goal-picker")?.hidden;
@@ -133,6 +148,11 @@ def check_session_hud(window: QMainWindow) -> None:
             goalCommand: window.__lofiCommand,
             remainingHidden: document.getElementById("lofi-session-workload")?.hidden,
             timerHidden: document.getElementById("lofi-session-time")?.hidden,
+            pauseHidden: document.getElementById("lofi-session-pause")?.hidden,
+            progressHiddenWithoutGoal,
+            brandMode,
+            timerVisibleWhenEnabled,
+            pauseVisibleWhenEnabled,
             progress,
           };
         })()
@@ -149,6 +169,11 @@ def check_session_hud(window: QMainWindow) -> None:
         "goalCommand": "lofi-town:set-target:50",
         "remainingHidden": True,
         "timerHidden": True,
+        "pauseHidden": True,
+        "progressHiddenWithoutGoal": True,
+        "brandMode": "goals",
+        "timerVisibleWhenEnabled": True,
+        "pauseVisibleWhenEnabled": True,
         "progress": "70%",
     }
     assert result == expected, result
@@ -156,7 +181,7 @@ def check_session_hud(window: QMainWindow) -> None:
 
 def check_session_recap(window: QMainWindow) -> None:
     bootstrap = build_recap_bootstrap(
-        DEFAULT_CONFIG,
+        {**DEFAULT_CONFIG, "hud_show_timer": True},
         {
             "answers": 60,
             "focusedMs": 1_500_000,
@@ -195,6 +220,31 @@ def check_session_recap(window: QMainWindow) -> None:
     assert "25 min focused" in result["text"]
     assert result["dismiss"] is True
     assert result["open"] is True
+
+    goal_only_bootstrap = build_recap_bootstrap(
+        DEFAULT_CONFIG,
+        {
+            "answers": 60,
+            "focusedMs": 1_500_000,
+            "blocksCompleted": 1,
+            "targetAnswers": 60,
+            "targetProgress": 60,
+            "targetsCompleted": 1,
+        },
+    )
+    goal_only = run_web_script(
+        window,
+        html.replace(bootstrap, goal_only_bootstrap),
+        "https://anki.local/congrats",
+        """
+        (() => ({
+          text: document.getElementById("lofi-town-recap")?.textContent,
+        }))()
+        """,
+    )
+    assert "60 answers" in goal_only["text"]
+    assert "focused" not in goal_only["text"]
+    assert "focus block" not in goal_only["text"]
 
 
 def run_smoke(addon_path: Path) -> None:

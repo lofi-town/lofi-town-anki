@@ -110,6 +110,7 @@ def build_recap_bootstrap(
         "summary": summary,
         "showOpenButton": normalized["lofi_town_breaks"],
         "showDismissButton": True,
+        "showTimer": normalized["hud_show_timer"],
     }
     data = json.dumps(payload, separators=(",", ":"), sort_keys=True)
     return f"""
@@ -135,6 +136,7 @@ def build_dynamic_bootstrap(
             "summary": summary,
             "showOpenButton": normalized["lofi_town_breaks"],
             "showDismissButton": False,
+            "showTimer": normalized["hud_show_timer"],
         },
         separators=(",", ":"),
         sort_keys=True,

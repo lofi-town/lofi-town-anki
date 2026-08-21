@@ -19,17 +19,20 @@ The optional study companion shows reviewer answer events and Anki's rendered
 New, Learn, and Review counts. It never queries or writes the collection. The
 review goal is a local answer-event count, not a claim about unique cards or
 mastery. It can be changed from the reviewer without changing the saved default.
-Focus and break blocks are non-modal and never reveal, answer, or reschedule
+Card-count goals are the default experience. Timers, focus blocks, and timed
+breaks are optional. They are non-modal and never reveal, answer, or reschedule
 cards. Lofi Town break prompts reveal the existing authenticated dock and can be
 disabled.
 
-`focus_minutes` accepts values from 0 through 180. Zero shows elapsed time only.
+`focus_minutes` accepts values from 0 through 180. Zero shows elapsed time only
+when the timer is enabled.
 `break_minutes` accepts values from 0 through 60. `session_target_answers`
 accepts values from 0 through 5000, with zero meaning that no default goal is
 shown. The reviewer also offers quick goals of 25, 50, 100, and 200 answers,
 plus a custom value from 1 through 5000.
 
 The reviewer strip can independently show or hide answers, Anki's remaining
-count, time, and progress. It can use a compact layout and sit above or below
-Anki's answer controls. The session recap is kept in memory only long enough to
-render the next deck, overview, or completed-deck screen.
+count, time, and progress. Time-based actions, progress, and recap facts stay
+hidden when the timer is disabled. The strip can use a compact layout and sit
+above or below Anki's answer controls. The session recap is kept in memory only
+long enough to render the next deck, overview, or completed-deck screen.

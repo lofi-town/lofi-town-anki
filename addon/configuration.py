@@ -5,7 +5,7 @@ from copy import deepcopy
 from typing import Any
 
 DEFAULT_CONFIG: dict[str, Any] = {
-    "config_version": 4,
+    "config_version": 5,
     "enabled": True,
     "palette": "tangerine",
     "color_mode": "light",
@@ -19,12 +19,12 @@ DEFAULT_CONFIG: dict[str, Any] = {
     "review_backdrop": False,
     "native_window": True,
     "session_hud": True,
-    "focus_minutes": 25,
-    "break_minutes": 5,
+    "focus_minutes": 0,
+    "break_minutes": 0,
     "session_target_answers": 0,
     "hud_show_answers": True,
     "hud_show_remaining": True,
-    "hud_show_timer": True,
+    "hud_show_timer": False,
     "hud_show_progress": True,
     "hud_compact": False,
     "hud_position": "top",
@@ -168,6 +168,19 @@ def normalize_config(raw: Any) -> dict[str, Any]:
 def _migrate_config(raw: dict[str, Any]) -> dict[str, Any]:
     migrated = dict(raw)
     version = raw.get("config_version")
+    if version == 4 and all(
+        raw.get(key, value) == value
+        for key, value in (
+            ("focus_minutes", 25),
+            ("break_minutes", 5),
+            ("hud_show_timer", True),
+        )
+    ):
+        migrated.update(
+            focus_minutes=DEFAULT_CONFIG["focus_minutes"],
+            break_minutes=DEFAULT_CONFIG["break_minutes"],
+            hud_show_timer=DEFAULT_CONFIG["hud_show_timer"],
+        )
     if isinstance(version, int) and not isinstance(version, bool) and version >= 3:
         return migrated
 

@@ -2,8 +2,8 @@
 
 The official Lofi Town companion add-on keeps the live town beside your
 flashcards in a resizable Anki panel. It also adds an optional cozy Anki theme,
-custom session goals, focus and break controls, review-session facts, and Lofi
-Town break handoffs.
+card-count goals, optional focus and break controls, review-session facts, and
+Lofi Town break handoffs.
 
 [Download the latest release](https://github.com/lofi-town/lofi-town-anki/releases/latest/download/lofi-town.ankiaddon)
 or [view all releases](https://github.com/lofi-town/lofi-town-anki/releases).
@@ -70,7 +70,8 @@ Get-FileHash .\lofi-town.ankiaddon -Algorithm SHA256
 - Use the title-bar pop-out button to move Lofi Town into its own window or
   dock it back into Anki.
 - Choose **Tools > Lofi Town Settings...** to adjust the theme, review goal,
-  focus and break blocks, reviewer strip, motion, spacing, and low-resource mode.
+  optional timer and breaks, reviewer strip, motion, spacing, and low-resource
+  mode.
 - Google and Discord sign-in open in the system browser and return to Anki.
   Keep Anki running until sign-in finishes.
 
@@ -105,14 +106,14 @@ Lofi Town account data is managed separately under the
   browsing sessions.
 - Adds customizable light and dark Anki themes with adjustable color, spacing,
   text size, roundness, motion, and texture.
-- Adds interactive review goals with a live countdown, quick choices, custom
-  targets, and a non-modal progress bar.
-- Adds custom focus and break lengths, answer-key hints, and quiet reviewer
-  mode.
+- Adds card-count goals by default, with a live countdown, quick choices,
+  custom targets, and a non-modal progress bar.
+- Keeps timers and custom focus and break lengths available as opt-in controls.
+- Adds answer-key hints and quiet reviewer mode.
 - Lets users independently hide answers, remaining cards, time, or progress,
   and move the reviewer strip below Anki's answer buttons.
-- Shows an in-memory recap after a review session with answers, focused time,
-  completed focus blocks, and completed answer targets.
+- Shows an in-memory recap after a review session with answers, completed
+  targets, and optional focused-time and focus-block facts.
 - Reveals the existing Lofi Town panel after a focus block or completed deck.
 - Leaves card templates and AnkiHub-owned views unchanged.
 
@@ -189,7 +190,7 @@ Before publishing a release:
 2. Verify Google and Discord sign-in from a packaged add-on.
 3. Verify the live town connection from the packaged add-on.
 4. Update `RELEASE_NOTES.md` and the version in `pyproject.toml`.
-5. Push a matching tag such as `v1.3.0`.
+5. Push a matching tag such as `v1.3.1`.
 
 The tag workflow runs the full checks and publishes `lofi-town.ankiaddon` and
 its SHA-256 checksum to GitHub Releases.

@@ -67,7 +67,7 @@ def test_legacy_default_migrates_to_game_palette_in_light_mode() -> None:
         }
     )
 
-    assert config["config_version"] == 4
+    assert config["config_version"] == 5
     assert config["palette"] == "tangerine"
     assert config["color_mode"] == "light"
     assert config["custom_accent"] == "#F2762E"
@@ -138,7 +138,7 @@ def test_study_flow_settings_are_normalized() -> None:
     assert config["low_resource"] is True
 
 
-def test_v3_config_gets_local_session_defaults() -> None:
+def test_v3_config_preserves_existing_focus_choice() -> None:
     config = normalize_config(
         {
             "config_version": 3,
@@ -147,9 +147,40 @@ def test_v3_config_gets_local_session_defaults() -> None:
         }
     )
 
-    assert config["config_version"] == 4
+    assert config["config_version"] == 5
     assert config["focus_minutes"] == 50
-    assert config["break_minutes"] == 5
+    assert config["break_minutes"] == 0
     assert config["session_target_answers"] == 0
     assert config["hud_show_progress"] is True
     assert config["hud_position"] == "top"
+
+
+def test_v4_timer_defaults_migrate_to_card_goals() -> None:
+    config = normalize_config(
+        {
+            "config_version": 4,
+            "focus_minutes": 25,
+            "break_minutes": 5,
+            "hud_show_timer": True,
+        }
+    )
+
+    assert config["config_version"] == 5
+    assert config["focus_minutes"] == 0
+    assert config["break_minutes"] == 0
+    assert config["hud_show_timer"] is False
+
+
+def test_v4_custom_timer_settings_are_preserved() -> None:
+    config = normalize_config(
+        {
+            "config_version": 4,
+            "focus_minutes": 37,
+            "break_minutes": 8,
+            "hud_show_timer": True,
+        }
+    )
+
+    assert config["focus_minutes"] == 37
+    assert config["break_minutes"] == 8
+    assert config["hud_show_timer"] is True

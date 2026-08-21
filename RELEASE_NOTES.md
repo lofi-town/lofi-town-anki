@@ -1,21 +1,20 @@
 ## What changed
 
-- Added interactive review goals with quick choices, custom values, a live
-  countdown, and a non-modal progress bar.
-- Added custom focus lengths from 1 through 180 minutes and optional break
-  countdowns from 1 through 60 minutes.
-- Added in-memory session recaps with answers, focused time, completed focus
-  blocks, and completed answer targets.
-- Added controls to independently hide answer, remaining, timer, and progress
-  facts, use a compact layout, or move the reviewer strip.
+- Made card-count goals the default reviewer experience, with quick choices,
+  custom values, a live countdown, and a non-modal progress bar.
+- Made timers, focus blocks, and timed breaks opt-in while keeping them
+  available for users who want a timed study flow.
+- Hid time-based controls and recap facts whenever the timer is disabled.
+- Preserved non-default timer settings while migrating the original 1.3.0
+  timer defaults to the new goal-first experience.
 - Continues to avoid collection reads, collection writes, scheduling changes,
   and transmission of card, deck, rating, answer-count, or remaining-card data.
 
 ## Install or update
 
 Download `lofi-town.ankiaddon`, open it with Anki Desktop, and restart Anki.
-Existing settings and the isolated Lofi Town session are preserved during an
-update.
+Non-default settings and the isolated Lofi Town session are preserved during
+an update.
 
 This release supports Anki Desktop 25.09.5 through 26.08.1 on macOS, Windows,
 and Linux. AnkiMobile and AnkiDroid do not load desktop add-ons.

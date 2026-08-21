@@ -85,11 +85,20 @@ class StudyCompanionSettings(QWidget):
         layout.addWidget(self._section_label("Study flow"))
         self._session_row, self.session_hud = self._toggle_setting(
             "Study companion",
-            "Show session facts and enable focus controls.",
+            "Show review goals and optional session facts.",
+        )
+        self.session_target_answers = QSpinBox(self)
+        self.session_target_answers.setRange(0, 5_000)
+        self.session_target_answers.setSpecialValueText("Choose in reviewer")
+        self.session_target_answers.setSuffix(" answers")
+        target_row = self._row_with_control(
+            "Review goal",
+            "Count down answers locally without changing scheduling.",
+            self.session_target_answers,
         )
         self.focus_minutes = QSpinBox(self)
         self.focus_minutes.setRange(0, 180)
-        self.focus_minutes.setSpecialValueText("Elapsed time only")
+        self.focus_minutes.setSpecialValueText("No focus block")
         self.focus_minutes.setSuffix(" min")
         focus_row = self._row_with_control(
             "Focus block",
@@ -105,15 +114,6 @@ class StudyCompanionSettings(QWidget):
             "Optional countdown after a completed focus block.",
             self.break_minutes,
         )
-        self.session_target_answers = QSpinBox(self)
-        self.session_target_answers.setRange(0, 5_000)
-        self.session_target_answers.setSpecialValueText("Until deck is clear")
-        self.session_target_answers.setSuffix(" answers")
-        target_row = self._row_with_control(
-            "Review goal",
-            "Count down answers locally without changing scheduling.",
-            self.session_target_answers,
-        )
         quiet_row, self.review_focus_mode = self._toggle_setting(
             "Quiet reviewer",
             "Reduce peripheral controls until you move to them.",
@@ -127,9 +127,9 @@ class StudyCompanionSettings(QWidget):
             "Reveal the town after a focus block or completed deck.",
         )
         self._study_rows = (
+            target_row,
             focus_row,
             break_row,
-            target_row,
             quiet_row,
             shortcut_row,
             handoff_row,
